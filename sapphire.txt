@@ -6598,6 +6598,44 @@ local u1073 = {"Camera", "Dot", "Backwards", "Slow", "Random"}
  
  
 do
+    local R = {Entries = {}, Destroyed = false}
+    u1070.runtime_cache = R
+    function R.Forget(folder)
+        local entry = R.Entries[folder]
+        if not entry then return end
+        R.Entries[folder] = nil
+        for _, connection in ipairs(entry.Connections) do connection:Disconnect() end
+        table.clear(entry.Connections)
+        entry.List = nil
+    end
+    function R.Children(folder)
+        if R.Destroyed or folder.Parent ~= u797 then return folder:GetChildren() end
+        local entry = R.Entries[folder]
+        if not entry then
+            entry = {Connections = {}}
+            R.Entries[folder] = entry
+            local function invalidate() entry.List = nil end
+            entry.Connections[1] = folder.ChildAdded:Connect(invalidate)
+            entry.Connections[2] = folder.ChildRemoved:Connect(invalidate)
+            entry.Connections[3] = folder.Destroying:Connect(function() R.Forget(folder) end)
+        end
+        if not entry.List then entry.List = folder:GetChildren() end
+        return entry.List
+    end
+    function R.Destroy()
+        if R.Destroyed then return end
+        R.Destroyed = true
+        local folders = {}
+        for folder in pairs(R.Entries) do folders[#folders + 1] = folder end
+        for _, folder in ipairs(folders) do R.Forget(folder) end
+        if R.Removed then R.Removed:Disconnect(); R.Removed = nil end
+        if R.Cleanup then R.Cleanup:Disconnect(); R.Cleanup = nil end
+    end
+    R.Removed = u797.ChildRemoved:Connect(R.Forget)
+    if u839 then R.Cleanup = u839.Destroying:Connect(R.Destroy) end
+end
+
+do
     local function initializeAdaptivePing()
         local function filter()
             return {Window = {}, RawWindow = {}, Noise = 0, Trend = 0, Slope = 0, Rejected = 0, Changes = 0, Run = 0}
@@ -9927,9 +9965,7 @@ __S[6] = function()
 
     local r1 = u1178.Fire
     local r2 = u1178
-    local r4 = u1070.curve.get_cframe()
-    local r5 = u1070.parry.get_event_data()
-    local r6 = u1070.parry.get_mouse_vec()
+    local r4, r5, r6 = u1070.parry.get_payload()
     return pcall(r1, r2, 0.5, r4, r5, r6, false)
 end
 
@@ -10129,7 +10165,7 @@ __S[6] = function()
             continue
         end
 
-        for v5, v6 in u812(v3:GetChildren()) do
+        for v5, v6 in u812(u1070.runtime_cache.Children(v3)) do
             if v6:GetAttribute("realBall") then
                 u825.insert(v1, {part = v6, model = nil})
                 continue
@@ -10256,11 +10292,14 @@ end
 
 u1070.player.has_singularity_cape = __S[3]
 
-__S[3] = function()
+__S[3] = function(context)
+    if context and context.Characters then return context.Characters end
     local r4 = u797:FindFirstChild("Alive")
 
     if r4 then
-        return r4:GetChildren()
+        local list = u1070.runtime_cache.Children(r4)
+        if context then context.Characters = list end
+        return list
     end
 
     local r4_2 = {}
@@ -10272,12 +10311,16 @@ __S[3] = function()
         end
     end
 
+    if context then context.Characters = r4_2 end
     return r4_2
 end
 
 u1070.player.get_alive_chars = __S[3]
 
-__S[3] = function()
+__S[3] = function(context)
+    if context and context.ClosestRead then return context.Closest end
+    if context then context.ClosestRead = true end
+    local camera = context and context.Camera or u1062
     if not u1070.player.get_root() then
         return nil
     end
@@ -10292,10 +10335,10 @@ __S[3] = function()
         return nil
     end
 
-    local r0 = u1062:ScreenPointToRay(r6_2.X, r6_2.Y)
+    local r0 = camera:ScreenPointToRay(r6_2.X, r6_2.Y)
     local r8 = u819.lookAt(r0.Origin, r0.Origin + r0.Direction)
     local r9 = -(1/0)
-    local r295 = u1070.player.get_alive_chars()
+    local r295 = u1070.player.get_alive_chars(context)
     local r10
 
     for r1, r2 in ipairs(r295) do
@@ -10303,7 +10346,7 @@ __S[3] = function()
             local r3 = r2:FindFirstChild("HumanoidRootPart")
 
             if r3 then
-                local r4 = r8.LookVector:Dot((r3.Position - u1062.CFrame.Position).Unit)
+                local r4 = r8.LookVector:Dot((r3.Position - camera.CFrame.Position).Unit)
 
                 if r9 < r4 then
                     r9 = r4
@@ -10313,16 +10356,17 @@ __S[3] = function()
         end
     end
 
+    if context then context.Closest = r10 end
     return r10
 end
 
 u1070.player.get_closest_to_cursor = __S[3]
 
-__S[3] = function()
+__S[3] = function(context)
     local target = u1070.target_player and u1070.target_player.Character()
     local root = target and u1070.target_player.RootOf(target)
     if root then return root.Position end
-    local closest = u1070.player.get_closest_to_cursor()
+    local closest = u1070.player.get_closest_to_cursor(context)
     root = closest and (closest.PrimaryPart or closest:FindFirstChild("HumanoidRootPart"))
     if root then return root.Position end
     root = u1070.player.get_root()
@@ -10332,17 +10376,17 @@ end
 
 u1070.curve.get_target_pos = __S[3]
 
-__S[3] = function()
+__S[3] = function(context)
      
-    local aim = u1070.target_player and u1070.target_player.GetAim()
+    local aim = u1070.target_player and u1070.target_player.GetAim(context)
     if aim then return aim.Frame end
-    local camera = u797.CurrentCamera or u1062
+    local camera = context and context.Camera or u797.CurrentCamera or u1062
     if not camera then return u819.new() end
     local cf = camera.CFrame
     local character = u1061.Character
     local root = character and character:FindFirstChild("HumanoidRootPart")
     if not root then return cf end
-    local position = u1070.curve.get_target_pos() or root.Position + cf.LookVector * 1000
+    local position = u1070.curve.get_target_pos(context) or root.Position + cf.LookVector * 1000
     local offset = position - root.Position
     local unit = offset.Magnitude > 0.001 and offset.Unit or cf.LookVector
     local method = u1070.config.curve_method or "camera"
@@ -10361,9 +10405,10 @@ end
 
 u1070.curve.get_cframe = __S[3]
 
-__S[3] = function()
-    local aim = u1070.target_player and u1070.target_player.GetAim()
+__S[3] = function(context)
+    local aim = u1070.target_player and u1070.target_player.GetAim(context)
     if aim then return aim.Points end
+    local camera = context and context.Camera or u1062
     local r6 = {}
 
     if not u1070.target_player and u1070.config.target_player_enabled and u1070.config.target_player_name then
@@ -10371,7 +10416,7 @@ __S[3] = function()
 
         if u1187 and u1187.Character and u1187.Character.PrimaryPart then
             local function r5()
-                return u1062:WorldToScreenPoint(u1187.Character.PrimaryPart.Position)
+                return camera:WorldToScreenPoint(u1187.Character.PrimaryPart.Position)
             end
 
             local r4, r5_2 = pcall(r5)
@@ -10384,12 +10429,12 @@ __S[3] = function()
         return r6
     end
 
-    local r291 = u1070.player.get_alive_chars()
+    local r291 = u1070.player.get_alive_chars(context)
 
     for r1, u1188 in ipairs(r291) do
         if u1188.PrimaryPart then
             local function r5_3()
-                return u1062:WorldToScreenPoint(u1188.PrimaryPart.Position)
+                return camera:WorldToScreenPoint(u1188.PrimaryPart.Position)
             end
 
             local r4_2, r5_4 = pcall(r5_3)
@@ -10405,9 +10450,10 @@ end
 
 u1070.parry.get_event_data = __S[3]
 
-__S[3] = function()
-    local aim = u1070.target_player and u1070.target_player.GetAim()
+__S[3] = function(context)
+    local aim = u1070.target_player and u1070.target_player.GetAim(context)
     if aim then return aim.Coordinates end
+    local camera = context and context.Camera or u1062
     if u1070.config.is_mobile then
         local r0 = u1062.ViewportSize
         return {r0.X / 2, r0.Y / 2}
@@ -10421,7 +10467,7 @@ __S[3] = function()
 
             if u1189 then
                 local function r3()
-                    return u1062:WorldToScreenPoint(u1189.Position)
+                    return camera:WorldToScreenPoint(u1189.Position)
                 end
 
                 local r2, r3_2 = pcall(r3)
@@ -10433,14 +10479,14 @@ __S[3] = function()
         end
     end
 
-    local r2_2 = u1070.player.get_closest_to_cursor()
+    local r2_2 = u1070.player.get_closest_to_cursor(context)
 
     if r2_2 then
         local u1190 = r2_2:FindFirstChild("HumanoidRootPart")
 
         if u1190 then
             local function r3_3()
-                return u1062:WorldToScreenPoint(u1190.Position)
+                return camera:WorldToScreenPoint(u1190.Position)
             end
 
             local r2_3, r3_4 = pcall(r3_3)
@@ -10469,6 +10515,14 @@ __S[3] = function()
 end
 
 u1070.parry.get_mouse_vec = __S[3]
+
+function u1070.parry.get_payload(context)
+    context = context or {Camera = u797.CurrentCamera or u1062}
+    local frame = u1070.curve.get_cframe(context)
+    local targets = u1070.parry.get_event_data(context)
+    local coordinates = u1070.parry.get_mouse_vec(context)
+    return frame, targets, coordinates
+end
 
 __S[3] = function()
     if u1070.config.parry_mode == "Keypress" then
@@ -11006,7 +11060,9 @@ do
     function B.SpeedOf(ball, part, now)
         local position = part.Position
         local previous = B.samples[part]
-        B.samples[part] = {Position = position, Time = now}
+        local oldPosition, oldTime = previous and previous.Position, previous and previous.Time
+        if previous then previous.Position, previous.Time = position, now
+        else B.samples[part] = {Position = position, Time = now} end
          
         local zoomies = ball:FindFirstChild("zoomies") or part:FindFirstChild("zoomies")
         local speed = readVelocity(zoomies, "VectorVelocity")
@@ -11023,9 +11079,9 @@ do
         if speed and speed > 0.001 then return speed end
          
         if previous then
-            local elapsed = now - previous.Time
+            local elapsed = now - oldTime
             if elapsed > 0.001 and elapsed <= 0.5 then
-                return magnitude((position - previous.Position) / elapsed) or 0
+                return magnitude((position - oldPosition) / elapsed) or 0
             end
         end
         return 0
@@ -11038,7 +11094,7 @@ do
         for _, name in ipairs({"Balls", "TrainingBalls"}) do
             local folder = u797:FindFirstChild(name)
             if folder then
-                for _, ball in ipairs(folder:GetChildren()) do
+                for _, ball in ipairs(u1070.runtime_cache.Children(folder)) do
                     local part = B.ResolvePart(ball)
                     local real = ball:GetAttribute("realBall")
                     if real == nil and part then real = part:GetAttribute("realBall") end
@@ -12983,6 +13039,7 @@ end
         if u1070.sapphire_misc then u1070.sapphire_misc.Destroy() end
         if u1070.target_player then u1070.target_player.Destroy() end
         if u1070.oxy_manual then u1070.oxy_manual.Destroy() end
+        if u1070.runtime_cache then u1070.runtime_cache.Destroy() end
         F.Destroyed = true
         u1070.triggerbot.enabled, u1070.triggerbot.connection = false, nil
         for key in pairs(F.Connections) do F.Disconnect(key) end
@@ -18389,7 +18446,7 @@ do
         Enabled = false, AutoEnabled = false, Destroyed = false, Ready = false, AutoReady = false, Busy = false,
         LastTick = 0, LastAuto = 0, Count = 0, AutoDistance = 0, Generation = 0,
         Session = 0, AutoSession = 0, Captured = {}, Hooks = {},
-        TokenCandidates = {}, CandidatesScanned = false,
+        TokenCandidates = {}, CandidatesScanned = false, KnownMetatables = {},
     }
     u1070.oxy_manual = M
 
@@ -18424,6 +18481,7 @@ do
     end
 
     function M.ReleaseCapture()
+        if M.CaptureAddedConnection then M.CaptureAddedConnection:Disconnect(); M.CaptureAddedConnection = nil end
         for mt, entry in pairs(M.Hooks) do
             entry.Active = false
              
@@ -18434,6 +18492,43 @@ do
         table.clear(M.Hooks)
     end
 
+    function M.HookRemote(remote)
+        if M.Destroyed or not (M.Enabled or M.AutoEnabled) or next(M.Captured) ~= nil then return end
+        if not (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then return end
+        local ok, mt = pcall(getrawmetatable, remote)
+        if ok and type(mt) == "table" then
+            M.KnownMetatables[mt] = true
+            M.HookMetatable(mt)
+        end
+    end
+    function M.HookMetatable(mt)
+        if M.Hooks[mt] or type(mt.__index) ~= "function" then return end
+        local readOnly = true
+        if type(isreadonly) == "function" then
+            local readOK, value = pcall(isreadonly, mt)
+            if readOK then readOnly = value end
+        end
+        local entry = {Original = mt.__index, ReadOnly = readOnly, Active = true}
+        entry.Wrapper = function(object, key)
+            local method = entry.Original(object, key)
+            if not entry.Active or (key ~= "FireServer" and key ~= "InvokeServer")
+                or type(method) ~= "function" then return method end
+            if not (object:IsA("RemoteEvent") or object:IsA("RemoteFunction")) then return method end
+            return function(self, ...)
+                local args = table.pack(...)
+                if entry.Active and (M.Enabled or M.AutoEnabled) and not M.Destroyed and self == object and M.ValidArguments(args) then
+                    M.Captured[object] = args
+                    M.ReleaseCapture()
+                end
+                return method(self, table.unpack(args, 1, args.n))
+            end
+        end
+        M.Hooks[mt] = entry
+        if not writeIndex(mt, entry.Wrapper, readOnly) then
+            entry.Active = false
+            M.Hooks[mt] = nil
+        end
+    end
     function M.InstallCapture()
         if M.Destroyed or not (M.Enabled or M.AutoEnabled) or next(M.Captured) ~= nil then return end
         if type(getrawmetatable) ~= "function" or type(setreadonly) ~= "function" then return end
@@ -18441,38 +18536,12 @@ do
         local now = u817()
         if M.CaptureRetryAt and now - M.CaptureRetryAt < 1 then return end
         M.CaptureRetryAt = now
-        for _, remote in ipairs(u1057:GetDescendants()) do
-            if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-                local ok, mt = pcall(getrawmetatable, remote)
-                if ok and type(mt) == "table" and type(mt.__index) == "function" and not M.Hooks[mt] then
-                    local readOnly = true
-                    if type(isreadonly) == "function" then
-                        local readOK, value = pcall(isreadonly, mt)
-                        if readOK then readOnly = value end
-                    end
-                    local entry = {Original = mt.__index, ReadOnly = readOnly, Active = true}
-                    entry.Wrapper = function(object, key)
-                        local method = entry.Original(object, key)
-                        if not entry.Active or (key ~= "FireServer" and key ~= "InvokeServer")
-                            or type(method) ~= "function" then return method end
-                        if not (object:IsA("RemoteEvent") or object:IsA("RemoteFunction")) then return method end
-                        return function(self, ...)
-                            local args = table.pack(...)
-                            if entry.Active and (M.Enabled or M.AutoEnabled) and not M.Destroyed and self == object and M.ValidArguments(args) then
-                                M.Captured[object] = args
-                                M.ReleaseCapture()
-                            end
-                             
-                            return method(self, table.unpack(args, 1, args.n))
-                        end
-                    end
-                    M.Hooks[mt] = entry
-                    if not writeIndex(mt, entry.Wrapper, readOnly) then
-                        entry.Active = false
-                        M.Hooks[mt] = nil
-                    end
-                end
-            end
+        if not M.CaptureAddedConnection then
+            M.CaptureAddedConnection = u1057.DescendantAdded:Connect(M.HookRemote)
+        end
+        for mt in pairs(M.KnownMetatables) do M.HookMetatable(mt) end
+        if next(M.Hooks) == nil then
+            for _, remote in ipairs(u1057:GetDescendants()) do M.HookRemote(remote) end
         end
     end
 
@@ -18560,51 +18629,40 @@ do
         end)
     end
 
-    function M.FireRemote(owner)
+    function M.FireRemote(owner, context)
         owner = owner or "Manual"
         local session = M.SessionFor(owner)
-        local function active()
-            return M.Active(owner, session)
-        end
-        if not active() or u1068 or not u797.CurrentCamera then return false end
-        local cf = u1070.curve.get_cframe()
-        local targets = u1070.parry.get_event_data()
-        local coordinates = u1070.parry.get_mouse_vec()
-        if not active() then return false end
+        if not M.Active(owner, session) or u1068 or not u797.CurrentCamera then return false end
+        local cf, targets, coordinates = u1070.parry.get_payload(context)
+        if not M.Active(owner, session) then return false end
         local sent = false
         for remote, original in pairs(M.Captured) do
-            if not active() then return sent end
+            if not M.Active(owner, session) then return sent end
             if not remote.Parent then
                 M.Captured[remote] = nil
             else
                 local token = M.Tokenize(original[2])
-                if not active() then return sent end
+                if not M.Active(owner, session) then return sent end
                 if token then
                      
-                    local ok = pcall(function()
-                        if remote:IsA("RemoteEvent") then
-                            remote:FireServer(original[1], original[2], token, 0.5, cf, targets, coordinates, false)
-                        elseif remote:IsA("RemoteFunction") then
-                            remote:InvokeServer(original[1], original[2], token, 0.5, cf, targets, coordinates, false)
-                        else
-                            error("Unsupported parry remote")
-                        end
-                    end)
+                    local method = remote:IsA("RemoteEvent") and remote.FireServer
+                        or remote:IsA("RemoteFunction") and remote.InvokeServer
+                    local ok = type(method) == "function" and pcall(method, remote, original[1], original[2], token, 0.5, cf, targets, coordinates, false)
                     if ok then sent = true else M.Captured[remote] = nil end
                 end
             end
         end
-        if not active() then return sent end
+        if not M.Active(owner, session) then return sent end
         if not sent then
              
              
             if next(M.Captured) == nil then M.InstallCapture() end
-            if u1179() and active() then
+            if u1179() and M.Active(owner, session) then
                 sent = pcall(u1178.Fire, u1178, 0.5, cf, targets, coordinates, false)
             end
             if not sent then return false end
         end
-        if sent and active() then M.RecordSend() end
+        if sent and M.Active(owner, session) then M.RecordSend() end
         return sent
     end
 
@@ -18634,7 +18692,13 @@ do
         if destroy then pcall(function() track:Destroy() end) end
     end
 
+    function V.CancelStop()
+        local pending = V.StopTask
+        V.StopTask = nil
+        if pending and type(task.cancel) == "function" then pcall(task.cancel, pending) end
+    end
     function V.Reset(full)
+        V.CancelStop()
         V.Generation += 1
         V.Pending = nil
         V.LastPulse = nil
@@ -18793,12 +18857,14 @@ do
             return
         end
         V.LastError = nil
+        V.CancelStop()
         V.Generation += 1
         local generation = V.Generation
         local length = track.Length or 0
         local cancelDelay = math.max(0.05, length > 0 and math.min(V.Interval, length * V.CancelFraction) or V.Interval)
-        task.delay(cancelDelay, function()
+        V.StopTask = task.delay(cancelDelay, function()
             if M.Destroyed or not M.VisualAllowed() or V.Generation ~= generation or V.Track ~= track then return end
+            V.StopTask = nil
             pcall(function() track:Stop(V.StopFade) end)
         end)
     end
@@ -18810,7 +18876,7 @@ do
         if owner == currentOwner then V.Reset(false) end
     end
 
-    function M.Dispatch(owner)
+    function M.Dispatch(owner, context)
         if M.Busy or not M.IsAlive() then return false end
         local session = M.SessionFor(owner)
         if not M.Active(owner, session) then return false end
@@ -18824,7 +18890,7 @@ do
                 sent = u1070.parry.execute_fast("Keypress") ~= false
                 if sent and M.Active(owner, session) then M.RecordSend() end
             else
-                sent = M.FireRemote(owner)
+                sent = M.FireRemote(owner, context)
                 if not sent and M.Active(owner, session) then
                     sent = u1070.parry.execute_fast("Keypress") ~= false
                     if sent and M.Active(owner, session) then M.RecordSend() end
@@ -18846,24 +18912,36 @@ do
         M.Dispatch("Manual")  
     end
 
+    function M.UpdateSchedulers()
+        local manual = not M.Destroyed and M.Enabled
+        local automatic = not M.Destroyed and M.AutoEnabled and not manual
+        if not manual and u1070.spam.connection_manual then
+            u1070.spam.connection_manual:Disconnect(); u1070.spam.connection_manual = nil
+        end
+        if not automatic and u1070.spam.connection_auto then
+            u1070.spam.connection_auto:Disconnect(); u1070.spam.connection_auto = nil
+        end
+        if manual and not u1070.spam.connection_manual then
+            u1070.spam.connection_manual = u1065:Connect(M.Step)
+        elseif automatic and not u1070.spam.connection_auto then
+            u1070.spam.connection_auto = u1065:Connect(M.StepAutoSpam)
+        end
+    end
     function M.SetManual(enabled)
         enabled = enabled == true
         if M.Destroyed then return end
         if M.Enabled == enabled then return end  
+        M.AutoEvaluating = nil
         M.Session += 1
         M.AutoSession += 1  
         V.Reset(false)
         M.Enabled = enabled
         u1070.spam.manual_enabled = enabled
-        if u1070.spam.connection_manual then
-            u1070.spam.connection_manual:Disconnect()
-            u1070.spam.connection_manual = nil
-        end
+        M.UpdateSchedulers()
         if enabled then
             M.LastTick = 0
             M.CaptureRetryAt = nil
              
-            u1070.spam.connection_manual = u1065:Connect(M.Step)
         elseif not M.AutoEnabled then
             M.ReleaseCapture()
         end
@@ -18871,6 +18949,7 @@ do
 
      
     function M.ResetCount()
+        M.AutoEvaluating = nil
         M.Generation += 1
         M.Count = 0
         u1070.spam.parries = 0
@@ -18895,14 +18974,14 @@ do
             M.WatchBalls(folder)
         end
         if not folder then return end
-        for _, ball in ipairs(folder:GetChildren()) do
+        for _, ball in ipairs(u1070.runtime_cache.Children(folder)) do
             if ball:GetAttribute("realBall") then
                 local part = ball:IsA("BasePart") and ball or ball.PrimaryPart or ball:FindFirstChild("Corpo") or ball:FindFirstChild("Body")
                 if part then return ball, part end
             end
         end
     end
-    function M.GetAutoOpponent(root)
+    function M.GetAutoOpponent(root, context)
         local config = u1070.config
         local lock = u1070.target_player
         if lock and lock.Ready and lock.Enabled then return lock.Character() end
@@ -18911,13 +18990,13 @@ do
             return target and target.Character
         end
         if type(u1070.player.get_closest_to_cursor) == "function" then
-            return u1070.player.get_closest_to_cursor()
+            return u1070.player.get_closest_to_cursor(context)
         end
          
         local folder = u797:FindFirstChild("Alive")
         local best, distance
         if folder then
-            for _, character in ipairs(folder:GetChildren()) do
+            for _, character in ipairs(u1070.runtime_cache.Children(folder)) do
                 local part = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
                 local humanoid = character:FindFirstChildOfClass("Humanoid")
                 if character ~= u1061.Character and part and (not humanoid or humanoid.Health > 0) then
@@ -18966,8 +19045,17 @@ do
     end
     function M.StepAutoSpam()
         if M.Destroyed or not M.AutoReady or not M.AutoEnabled or M.Enabled or M.Busy then return end
+        if M.AutoEvaluating and M.AutoEvaluating.Session == M.AutoSession then return end
         local now = u817()
-        if now - (M.LastAuto or 0) < 0.001 or not M.IsAlive() then return end
+        if now - (M.LastAuto or 0) < 0.001 then return end
+        local threshold = math.clamp(tonumber(u1070.spam.threshold) or 1.5, 1, 5)
+        if M.Count <= threshold then
+            M.AutoDistance, M.AutoDistanceScale = 0, nil
+            return
+        end
+        if not M.IsAlive() then return end
+        local evaluation = {Session = M.AutoSession, At = now}
+        M.AutoEvaluating = evaluation
         local ok, err = pcall(function()
             local ball, part = M.GetAutoBall()
             local zoomies = ball and ball:FindFirstChild("zoomies")
@@ -18975,7 +19063,8 @@ do
             local character = u1061.Character
             local root = character and (character.PrimaryPart or character:FindFirstChild("HumanoidRootPart"))
             if not root or character:GetAttribute("Pulsed") then return end
-            local opponent = M.GetAutoOpponent(root)
+            local context = {Camera = u797.CurrentCamera or u1062}
+            local opponent = M.GetAutoOpponent(root, context)
             local opponentRoot = opponent and (opponent.PrimaryPart or opponent:FindFirstChild("HumanoidRootPart"))
             local humanoid = opponent and opponent:FindFirstChildOfClass("Humanoid")
             if not opponentRoot or opponent == character or humanoid and humanoid.Health <= 0 then return end
@@ -18998,28 +19087,30 @@ do
             local target = u1070.sapphire and u1070.sapphire.Target(ball) or ball:GetAttribute("target")
             if not target or target == "" or characterDistance > radius or distance > radius then return end
             if target == u1061.Name and characterDistance > 30 and distance > 30 then return end
-            local threshold = math.clamp(tonumber(u1070.spam.threshold) or 1.5, 1, 5)
+            if M.AutoEvaluating ~= evaluation or not M.Active("Auto", evaluation.Session)
+                or u817() - now > 0.1 or u817() < now then return end
             if distance <= radius and M.Count > threshold and ball.Parent and M.AutoEnabled and not M.Enabled then
                 M.LastAuto = now
-                M.Dispatch("Auto")
+                M.Dispatch("Auto", context)
             end
         end)
-        if not ok then M.LastError = tostring(err) end
+        if M.AutoEvaluating == evaluation then
+            M.AutoEvaluating = nil
+            if not ok then M.LastError = tostring(err) end
+        end
     end
     function M.SetAuto(enabled)
         if M.Destroyed then return end
         enabled = enabled == true
         if M.AutoEnabled == enabled then return end
+        M.AutoEvaluating = nil
         M.AutoSession += 1
         M.AutoEnabled = enabled
         u1070.spam.auto_enabled = enabled
-        if u1070.spam.connection_auto then
-            u1070.spam.connection_auto:Disconnect(); u1070.spam.connection_auto = nil
-        end
+        M.UpdateSchedulers()
         if not M.Enabled then V.Reset(false) end
         if enabled then
             M.LastAuto = 0
-            u1070.spam.connection_auto = u1065:Connect(M.StepAutoSpam)
         elseif not M.Enabled then M.ReleaseCapture() end
     end
     M.WatchBalls(u797:FindFirstChild("Balls"))
@@ -19035,11 +19126,13 @@ do
         M.SetManual(false)
         V.Reset(true)
         M.Destroyed = true
+        M.AutoEvaluating = nil
         M.Generation += 1
         M.Count = 0
         u1070.spam.parries = 0
         table.clear(M.Captured)
         table.clear(M.TokenCandidates)
+        table.clear(M.KnownMetatables)
         M.TokenFunction = nil
         if M.CleanupConnection then M.CleanupConnection:Disconnect() end
         if M.CharacterConnection then M.CharacterConnection:Disconnect() end
@@ -19124,12 +19217,14 @@ do
         if not T.Ready or not T.Enabled or T.Destroyed then return nil end
         return T.AliveCharacter(T.Resolve())
     end
-    function T.GetAim()
+    function T.GetAim(context)
+        if context and context.AimRead then return context.Aim end
+        if context then context.AimRead = true end
         local character = T.Character()
         local targetRoot = T.RootOf(character)
         local mine = u1061.Character
         local myRoot = mine and (mine.PrimaryPart or mine:FindFirstChild("HumanoidRootPart"))
-        local camera = u797.CurrentCamera or u1062
+        local camera = context and context.Camera or u797.CurrentCamera or u1062
         if not character or not targetRoot or not myRoot or not camera then return nil end
         if (myRoot.Position - targetRoot.Position).Magnitude < 0.001 then return nil end
         local ok, screenPoint = pcall(function() return camera:WorldToScreenPoint(targetRoot.Position) end)
@@ -19138,8 +19233,10 @@ do
             local viewport = camera.ViewportSize
             screenPoint = Vector3.new(math.clamp(screenPoint.X, 0, viewport.X), math.clamp(screenPoint.Y, 0, viewport.Y), 0)
         end
-        return {Frame = u819.lookAt(myRoot.Position, targetRoot.Position),
+        local aim = {Frame = u819.lookAt(myRoot.Position, targetRoot.Position),
             Coordinates = {screenPoint.X, screenPoint.Y}, Points = {[character.Name] = screenPoint}}
+        if context then context.Aim = aim end
+        return aim
     end
     function T.SyncConfig()
         u1070.config.target_player_enabled = T.Ready and T.Enabled and not T.Destroyed
