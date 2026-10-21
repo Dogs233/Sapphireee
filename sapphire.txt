@@ -6652,31 +6652,43 @@ do
             if #list >= size then table.remove(list, 1) end
             table.insert(list, value)
         end
-        local function quantile(list, fraction)
-            if #list == 0 then return 0 end
-            local sorted = table.clone(list); table.sort(sorted)
+        local sortedScratch, deviationScratch = {}, {}
+        P.WorkSorted, P.WorkDeviations = sortedScratch, deviationScratch
+        local function ordered(list)
+            table.clear(sortedScratch)
+            for i = 1, #list do sortedScratch[i] = list[i] end
+            table.sort(sortedScratch)
+            return sortedScratch
+        end
+        local function percentile(sorted, fraction)
+            if #sorted == 0 then return 0 end
             local index = 1 + (#sorted - 1) * fraction
             local low, high = math.floor(index), math.ceil(index)
             return sorted[low] + (sorted[high] - sorted[low]) * (index - low)
         end
+        local function quantile(list, fraction)
+            return percentile(ordered(list), fraction)
+        end
         local function spread(list)
-            local center = quantile(list, 0.5)
-            local deviations = {}
-            for _, value in ipairs(list) do table.insert(deviations, math.abs(value - center)) end
-            local noise = math.max(quantile(deviations, 0.5) * 1.4826,
-                (quantile(list, 0.75) - quantile(list, 0.25)) / 1.349)
-            return center, noise
+            local sorted = ordered(list)
+            local center = percentile(sorted, 0.5)
+            local lower, upper, tail = percentile(sorted, 0.25), percentile(sorted, 0.75), percentile(sorted, 0.85)
+            table.clear(deviationScratch)
+            for i = 1, #sorted do deviationScratch[i] = math.abs(sorted[i] - center) end
+            table.sort(deviationScratch)
+            local noise = math.max(percentile(deviationScratch, 0.5) * 1.4826, (upper - lower) / 1.349)
+            return center, noise, lower, upper, tail
         end
         local function ingest(F, value, now, native, corroborated)
             if value ~= F.Raw then F.RawChangedAt = now end
             F.Raw = value
             append(F.RawWindow, value, 9)
             if not F.Estimate then
-                F.Estimate, F.Window, F.Slope = value, {value}, 0
+                F.Estimate, F.Window, F.Slope, F.UpperQuantile, F.RawNoise = value, {value}, 0, value, 0
             else
                 local center, noise = spread(F.Window)
-                local _, rawNoise = spread(F.RawWindow)
-                local lower, upper = quantile(F.RawWindow, 0.25), quantile(F.RawWindow, 0.75)
+                local _, rawNoise, lower, upper = spread(F.RawWindow)
+                F.RawNoise = rawNoise
                 local bothSides = #F.RawWindow >= 7 and lower < center - (native and 4 or 8)
                     and upper > center + (native and 4 or 8)
                 local limit = math.max(native and 10 or 20, center * 0.2,
@@ -6703,13 +6715,16 @@ do
                     local close = pending and math.abs(value - pending.Value) <= math.max(corroborated and limit * 2 or limit, math.abs(pending.Value - center) * 0.25)
                     if pending and sameSide and close and now - pending.At <= 0.6 then
                          
-                        if now - pending.At < (corroborated and 0.065 or 0.085) then return false end
+                        pending.Dwell = corroborated and 0.065 or 0.085
+                        if now - pending.At < pending.Dwell then return false end
                         F.Estimate, F.Window, F.RawWindow = (pending.Value + value) * 0.5, {pending.Value, value}, {pending.Value, value}
+                        F.UpperQuantile = math.min(pending.Value, value) + math.abs(value - pending.Value) * 0.85
+                        F.RawNoise = math.abs(value - pending.Value) * 0.5 * 1.4826
                         F.Noise = math.min(F.Noise, math.abs(value - pending.Value) * 0.5)
                         F.Pending, F.Slope, F.Trend, F.Run = nil, 0, 0, 0
                         F.Changes += 1
                     else
-                        F.Pending = {Value = value, At = now}; F.Rejected += 1
+                        F.Pending = {Value = value, At = now, Dwell = corroborated and 0.065 or 0.085}; F.Rejected += 1
                         return false
                     end
                 else
@@ -6729,7 +6744,8 @@ do
                     F.Slope += ((F.Estimate - previous) / dt - F.Slope) * slopeAlpha
                     F.Trend = coherent and math.max(0, F.Slope) * 0.1 or 0
                     append(F.Window, value, 16)
-                    local _, acceptedNoise = spread(F.Window)
+                    local _, acceptedNoise, _, _, upperQuantile = spread(F.Window)
+                    F.UpperQuantile = upperQuantile
                     if jitterEvidence then acceptedNoise = math.max(acceptedNoise, rawNoise) end
                     acceptedNoise = math.min(acceptedNoise, native and 30 or 60)
                     local noiseAlpha = 1 - (acceptedNoise > F.Noise and 0.65 or 0.8) ^ (dt / 0.1)
@@ -6737,15 +6753,14 @@ do
                 end
             end
             F.AcceptedAt, F.AcceptedRaw = now, value
-            F.Tail = math.max(0, quantile(F.Window, 0.85) - F.Estimate)
+            F.Tail = math.max(0, (F.UpperQuantile or F.Estimate) - F.Estimate)
             return true
         end
         local function calibrate(value, now)
             if not N.AcceptedAt or now - N.AcceptedAt > 0.15 or not N.AcceptedRaw or N.AcceptedRaw <= 0 then return end
             if math.abs(now - N.AcceptedAt) > 1e-6 then return end
             if P.Ratio and #P.Ratios >= 4 then
-                local _, statsNoise = spread(P.RawWindow)
-                local _, nativeNoise = spread(N.RawWindow)
+                local statsNoise, nativeNoise = P.RawNoise or 0, N.RawNoise or 0
                 if statsNoise > math.max(3, P.Estimate * 0.04) or nativeNoise > math.max(1, N.Estimate * 0.04) then return end
             end
             local candidate = value / N.AcceptedRaw
@@ -6770,12 +6785,17 @@ do
             return P.Ratio and valid(stats, false) and valid(native, false)
                 and math.abs(stats - native * P.Ratio) <= math.max(12, math.min(stats * 0.15, 50))
         end
-        local function ingestStats(value, now)
+        local function ingestStats(value, now, synchronized, observedAt, nativeAccepted)
             if P.Destroyed or not valid(value, false) then return false end
             if value ~= P.Raw then P.FrozenCount = 0 end
-            local corroborated = N.ObservedAt and now - N.ObservedAt <= 0.15 and agreement(value, N.Raw)
+            local corroborated = synchronized ~= false and N.ObservedAt and now >= N.ObservedAt
+                and now - N.ObservedAt <= 0.15 and agreement(value, N.Raw)
             local accepted = ingest(P, value, now, false, corroborated)
-            if accepted then u1070.cache.ping = P.Estimate; calibrate(value, now) end
+            if accepted then
+                P.AcceptedObservedAt = observedAt or now
+                u1070.cache.ping = P.Estimate
+                if synchronized ~= false and nativeAccepted ~= false then calibrate(value, now) end
+            end
             return accepted
         end
         function P.Ingest(value)
@@ -6783,29 +6803,37 @@ do
         end
         function P.RecordFrame(delta)
             if P.Destroyed or not valid(delta, false) or delta < 0.001 or delta > 0.5 then return end
-            P.FrameAt = u1066()
+            local now = u1066()
+            if P.FrameAt and (now < P.FrameAt or now - P.FrameAt > 0.5) then
+                table.clear(P.Frames)
+                P.FrameElapsed, P.FrameMargin, P.FrameSeconds = 0, 0, nil
+            end
+            P.FrameAt = now
             append(P.Frames, delta * 1000, 32)
             P.FrameElapsed = (P.FrameElapsed or 0) + delta
             if #P.Frames < 12 or P.FrameElapsed < 0.1 then return end
             P.FrameElapsed = 0
-            P.FrameSeconds = math.clamp(quantile(P.Frames, 0.75) / 1000, 0.004, 0.05)
-            local target = math.clamp(quantile(P.Frames, 0.9) - 20, 0, 12)
+            local frames = ordered(P.Frames)
+            P.FrameSeconds = math.clamp(percentile(frames, 0.75) / 1000, 0.004, 0.05)
+            local target = math.clamp(percentile(frames, 0.9) - 20, 0, 12)
             P.FrameMargin += (target - P.FrameMargin) * (target > P.FrameMargin and 0.55 or 0.65)
             if P.FrameMargin < 0.01 then P.FrameMargin = 0 end
         end
         local function base()
             local now = u1066()
-            local statsFresh = P.AcceptedAt and now - P.AcceptedAt <= 0.75
-            local networkFresh = N.AcceptedAt and now - N.AcceptedAt <= 0.5 and (N.Estimate > 0 or not P.Estimate)
+            local statsAt = P.AcceptedObservedAt or P.AcceptedAt
+            local networkAt = N.AcceptedObservedAt or N.AcceptedAt
+            local statsFresh = statsAt and now >= statsAt and now - statsAt <= 0.75
+            local networkFresh = networkAt and now >= networkAt and now - networkAt <= 0.5 and (N.Estimate > 0 or not P.Estimate)
             local recovering = P.StatsFailures >= 2 or P.Recovering and P.StatsRecovery < 2
             if P.Estimate and statsFresh and (P.FrozenCount or 0) < 3 and not P.Pending and not recovering then
-                return P.Estimate, "stats", P.Noise, P.Trend, P.AcceptedAt
+                return P.Estimate, "stats", P.Noise, P.Trend, statsAt
             end
             if networkFresh then return math.clamp(N.Estimate * (P.Ratio or 1), 0, 10000), "network",
-                math.min(N.Noise * (P.Ratio or 1), 60), N.Trend * (P.Ratio or 1), N.AcceptedAt end
+                math.min(N.Noise * (P.Ratio or 1), 60), N.Trend * (P.Ratio or 1), networkAt end
             if P.Estimate and (P.FrozenCount or 0) < 3 and P.StatsFailures < 2
                 and P.AcceptedAt >= (P.LastEffectiveAt or -math.huge) then
-                return P.Estimate, "last valid", 0, 0, P.AcceptedAt
+                return P.Estimate, "last valid", 0, 0, statsAt
             end
             if P.LastEffective or P.Estimate then return P.LastEffective or P.Estimate, "last valid", 0, 0, P.LastEffectiveAt or P.AcceptedAt end
             return 50, "default", 0, 0, nil
@@ -6844,11 +6872,13 @@ do
                 Tail = snapshot.Tail, Live = snapshot.Live, Calibrated = snapshot.Calibrated, FrameSeconds = snapshot.FrameSeconds,
                 RejectedSpikes = P.Rejected, ConfirmedChanges = P.Changes, Samples = #P.Window,
                 NativeRejectedSpikes = N.Rejected, CalibrationSamples = #P.Ratios, Scale = P.Ratio,
-                Age = snapshot.Age,
+                Age = snapshot.Age, SensorSkew = P.SensorSkew, Synchronized = P.Synchronized,
+                ConfirmationAt = P.ConfirmationAt, ExpiredReads = P.ExpiredReads or 0,
                 PollInterval = pollInterval(u1066())}
         end
         local function refreshSamples()
             local started = u1066()
+            P.LastPollAt = started
             if not statsItem or not statsItem.Parent or not statsItem:IsDescendantOf(u1059) then
                 local folder = u1059:FindFirstChild("Network")
                 local items = folder and folder:FindFirstChild("ServerStatsItem")
@@ -6857,6 +6887,7 @@ do
             local statsOK, raw = false, nil
             local readItem = statsItem
             if readItem then statsOK, raw = pcall(readItem.GetValue, readItem) end
+            local statsCompleted = u1066()
             if P.Destroyed then return false end
             local nativeStarted = u1066()
             local ok, network = pcall(function() return u1061:GetNetworkPing() * 1000 end)
@@ -6869,14 +6900,22 @@ do
             statsOK = statsOK and statsTimely and valid(raw, false) and readItem == statsItem
                 and readItem.Parent ~= nil and readItem:IsDescendantOf(u1059)
             if not statsTimely or not nativeTimely then P.ExpiredReads = (P.ExpiredReads or 0) + 1 end
-            if ok and nativeTimely and valid(network, true) and (network > 0 or not P.Estimate) then
-                N.ObservedAt = now
-                ingest(N, network, now, true, statsOK and agreement(raw, network))
+            local nativeOK = ok and nativeTimely and valid(network, true) and (network > 0 or not P.Estimate)
+            P.SensorSkew = math.max(0, now - statsCompleted)
+            P.Synchronized = statsOK and nativeOK and P.SensorSkew <= 0.05
+                and statsCompleted >= started and statsCompleted - started <= 0.05
+            local nativeAccepted = false
+            if nativeOK then
+                N.ObservedAt = nativeStarted
+                nativeAccepted = ingest(N, network, now, true, P.Synchronized and agreement(raw, network))
+                if nativeAccepted then
+                    N.AcceptedObservedAt = nativeStarted
+                end
             end
             P.Network, P.NetworkAt, P.NetworkRaw = N.Estimate, N.AcceptedAt, N.AcceptedRaw
             if statsOK then
                 P.StatsRecovery += 1
-                local accepted = ingestStats(raw, now)
+                local accepted = ingestStats(raw, now, P.Synchronized, started, nativeAccepted)
                 if P.StatsRecovery >= 2 and accepted then P.Recovering = false end
                 P.StatsFailures = 0
             else
@@ -6893,6 +6932,15 @@ do
             end
             if P.Pending or N.Pending or P.StatsFailures > 0 or (P.FrozenCount or 0) > 0
                 or P.Noise > 12 or N.Noise * (P.Ratio or 1) > 12 or P.Trend > 2 then P.FastUntil = now + 0.75 end
+            P.ConfirmationAt = nil
+            for _, filterState in ipairs({P, N}) do
+                local pending = filterState.Pending
+                local available = filterState == P and statsOK or filterState == N and nativeOK
+                if pending and available and now >= pending.At and now - pending.At <= 0.6 then
+                    local deadline = math.max(now + 0.01, pending.At + (pending.Dwell or 0.085))
+                    P.ConfirmationAt = math.min(P.ConfirmationAt or math.huge, deadline)
+                end
+            end
             local value, source, _, _, at = base()
             if (source == "stats" or source == "network") and value > 0 then P.LastEffective, P.LastEffectiveAt = value, at end
             u1070.cache.ping = value
@@ -6904,7 +6952,7 @@ do
             P.Refreshing = token
             local ok, result = pcall(refreshSamples)
             if P.Refreshing == token then P.Refreshing = nil end
-            if not ok then P.RefreshError = tostring(result); return false end
+            if not ok then P.RefreshError = tostring(result); P.ConfirmationAt = nil; return false end
             P.RefreshError = nil
             return result
         end
@@ -6912,8 +6960,8 @@ do
             P.Destroyed, P.Refreshing = true, nil
             if P.Connection then P.Connection:Disconnect(); P.Connection = nil end
             statsItem = nil
-            for _, list in ipairs({P.Window, P.RawWindow, P.Frames, P.Ratios, N.Window, N.RawWindow}) do table.clear(list) end
-            P.Pending, N.Pending, P.RatioCandidates = nil, nil, nil
+            for _, list in ipairs({P.Window, P.RawWindow, P.Frames, P.Ratios, N.Window, N.RawWindow, sortedScratch, deviationScratch}) do table.clear(list) end
+            P.Pending, N.Pending, P.RatioCandidates, P.ConfirmationAt = nil, nil, nil, nil
         end
         u1070.cache.get_ping, u1070.cache.get_ping_jitter, u1070.cache.get_parry_ping = P.Get, P.Jitter, P.Parry
         P.Refresh()
@@ -6921,9 +6969,14 @@ do
         P.Connection = u1063:Connect(function(delta)
             if not valid(delta, true) then return end
             elapsed += delta
-            local interval = pollInterval(u1066())
-            if elapsed + 1e-9 >= interval then
-                elapsed = math.max(0, elapsed - math.floor((elapsed + 1e-9) / interval) * interval)
+            if P.Refreshing then return end
+            local now = u1066()
+            local interval = pollInterval(now)
+            local scheduled = elapsed + 1e-9 >= interval
+            local confirmation = P.ConfirmationAt and now + 1e-9 >= P.ConfirmationAt
+                and (not P.LastPollAt or now - P.LastPollAt >= 0.01 - 1e-9)
+            if scheduled or confirmation then
+                elapsed = scheduled and math.max(0, elapsed - math.floor((elapsed + 1e-9) / interval) * interval) or 0
                 P.Refresh()
             end
         end)
