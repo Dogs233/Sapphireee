@@ -12210,6 +12210,9 @@ index12 = function(line)
 	line.CurveReference = nil
 	line.CurveSource = nil
 	line.CurveTargetDirection = nil
+    line.CurveObservation = nil
+    line.CurveWarping = nil
+    line.CurveTime = nil
 	line.CurveReady = nil
 	line.CurveVersion = (line.CurveVersion or 0) + 1
 end
@@ -12217,13 +12220,18 @@ end
 index13 = function(line)
 	line.CurveTime = os.clock()
 	line.CurveWarping = nil
+    line.CurveObservation = nil
 end
 
 index14 = function(line)
 	line.CurveTime = nil
 	line.CurveWarping = nil
+    line.CurveObservation = nil
 end
 
+local function finiteCurveComponent(value)
+    return value == value and math.abs(value) < math.huge
+end
 index15 = function(line, object, descendant, radius, zCoordinate, alpha, color, initialCapacity, targetPosition)
 	if not flags.AntiCurveEnabled or not line or line.Parent == CoreGui or index6(line) then
 		return false
@@ -12234,6 +12242,7 @@ index15 = function(line, object, descendant, radius, zCoordinate, alpha, color, 
 	end
 
 	radius = radius or index4(line)
+    if typeof(radius) ~= "Vector3" then return false end
 	alpha = alpha or radius.Magnitude
 	if alpha ~= alpha or alpha == math.huge or alpha < 0.001 then
 		return false
@@ -12259,6 +12268,14 @@ index15 = function(line, object, descendant, radius, zCoordinate, alpha, color, 
 	if zCoordinate ~= zCoordinate or zCoordinate == math.huge or zCoordinate < 0.001 then
 		return false
 	end
+    if not object.Position or typeof(object.Position) ~= "Vector3" or typeof(color) ~= "Vector3"
+        or descendant and typeof(descendant) ~= "Vector3" then return false end
+    local px, py, pz = object.Position.X, object.Position.Y, object.Position.Z
+    if not finiteCurveComponent(radius.X) or not finiteCurveComponent(radius.Y) or not finiteCurveComponent(radius.Z)
+        or not finiteCurveComponent(color.X) or not finiteCurveComponent(color.Y) or not finiteCurveComponent(color.Z)
+        or not finiteCurveComponent(px) or not finiteCurveComponent(py) or not finiteCurveComponent(pz) then return false end
+    if descendant and (not finiteCurveComponent(descendant.X) or not finiteCurveComponent(descendant.Y)
+        or not finiteCurveComponent(descendant.Z)) then return false end
 
 	local radians = index7(line)
 	local osClock = os.clock()
@@ -12283,9 +12300,36 @@ index15 = function(line, object, descendant, radius, zCoordinate, alpha, color, 
 		return false
 	end
 
-	if closing < 0.45 then
-		radians.CurveWarping = osClock
-	end
+    local observedVelocity = radius
+    local observedSpeed = observedVelocity.Magnitude
+    local sender = line:GetAttribute("from")
+    local observation = radians.CurveObservation
+    local target = initialCapacity or compareFunction(line)
+    if observedSpeed == observedSpeed and observedSpeed < math.huge and observedSpeed >= 0.001 then
+        local previous = observation
+        local dt = previous and osClock - previous.At or nil
+        local sameCycle = previous and previous.Target == target and previous.Sender == sender
+            and previous.Parent == line.Parent and previous.Version == (radians.CurveVersion or 0)
+        if not sameCycle or not dt or dt < 0 or dt > 0.12 then
+            radians.CurveWarping, radians.CurveTime = nil, nil
+            observation = {At = osClock, Position = ballPosition, Velocity = observedVelocity,
+                Target = target, Sender = sender, Parent = line.Parent, Version = radians.CurveVersion or 0}
+            radians.CurveObservation = observation
+        elseif dt >= 0.008 then
+            local oldSpeed = previous.Velocity.Magnitude
+            local directionDot = oldSpeed > 0.001 and observedVelocity:Dot(previous.Velocity) / (observedSpeed * oldSpeed) or 1
+            local predicted = previous.Position + previous.Velocity * dt
+            local bendError = (ballPosition - predicted).Magnitude
+            local bendFloor = math.max(0.35, math.min(observedSpeed, oldSpeed) * dt * 0.06)
+            local turned = directionDot < 0.97 and bendError > bendFloor
+            observation = {At = osClock, Position = ballPosition, Velocity = observedVelocity,
+                Target = target, Sender = sender, Parent = line.Parent, Version = radians.CurveVersion or 0}
+            radians.CurveObservation = observation
+            if closing < 0.45 and turned then radians.CurveWarping = osClock end
+        end
+    else
+        radians.CurveObservation = nil
+    end
 
 	local warping = radians.CurveWarping
 
@@ -13598,6 +13642,53 @@ end
                 local penalty = math.clamp((missSquared - 144) / 144, 0, 1) * 0.5
                 return true, radial * (1 + penalty), distance
             end
+            function D.Rank(root, position, velocity, scan)
+                local approaching, radial, distance = D.Threat(root, position, velocity, scan)
+                if not approaching then return false, radial, distance, 2 end
+                if distance <= 12 then return true, 0, distance, 0 end
+                if radial == math.huge then return false, radial, distance, 2 end
+                local rootPosition = scan and scan.Root == root and scan.RootPosition or root.Position
+                local playerVelocity = scan and scan.Root == root and scan.PlayerVelocity or D.PlayerVelocity(root)
+                local relative, motion = position - rootPosition, velocity - playerVelocity
+                local rx, ry, rz = relative.X, relative.Y, relative.Z
+                local vx, vy, vz = motion.X, motion.Y, motion.Z
+                local a, b = vx * vx + vy * vy + vz * vz, rx * vx + ry * vy + rz * vz
+                local x, y, z = ry * vz - rz * vy, rz * vx - rx * vz, rx * vy - ry * vx
+                local missSquared = (x * x + y * y + z * z) / a
+                if missSquared <= 144 then
+                    local c = rx * rx + ry * ry + rz * rz - 144
+                    local impact = c / (-b + math.sqrt(a * math.max(0, 144 - missSquared)))
+                    return true, impact, distance, 0
+                end
+                local penalty = math.clamp((missSquared - 144) / 144, 0, 1) * 0.5
+                return true, radial * (1 + penalty), distance, 1
+            end
+            function D.Prefer(priority, arrival, distance, previousPriority, previousArrival, previousDistance)
+                return priority < previousPriority or priority == previousPriority
+                    and (arrival < previousArrival or arrival == previousArrival and distance < previousDistance)
+            end
+            local frameTime = {At = nil, Budget = 0}
+            D.FrameTime = frameTime
+            function D.ResetFrameTime()
+                frameTime.At, frameTime.Budget = nil, 0
+            end
+            function D.ObserveFrame(delta)
+                if delta == nil then return end
+                local now = os.clock()
+                if type(delta) ~= "number" or delta ~= delta or delta <= 0 or delta > 0.25 then
+                    frameTime.At, frameTime.Budget = now, 0
+                    return
+                end
+                local gap = frameTime.At and now - frameTime.At or 0
+                frameTime.At = now
+                frameTime.Budget = gap >= 0 and gap <= 0.25 and math.min(gap, 0.02) or 0
+            end
+            function D.FrameBudget(now)
+                if frameTime.At then
+                    return now >= frameTime.At and now - frameTime.At <= 0.1 and frameTime.Budget or 0
+                end
+                return math.clamp(now - (sapphireBBState.ParryFrameAt or now), 0, 0.02)
+            end
             function D.TimingRadius(root, position, velocity, radius, scan, ping, step)
                 if type(radius) ~= "number" or radius ~= radius or radius <= 0 then return 0 end
                 if not D.Vector(position) or not D.Vector(velocity) then return radius end
@@ -13618,8 +13709,10 @@ end
                 state.AutoCycleVersion = (state.AutoCycleVersion or 0) + 1
                 state.AutoReservation, state.Motion = nil, nil
                 state.BackwardsScore, state.BackwardsAt = nil, nil
+                state.CurveObservation, state.CurveWarping, state.CurveTime = nil, nil, nil
             end
             function D.Reset()
+                D.ResetFrameTime()
                 D.Generation += 1
                 D.Inflight, D.LastAck = nil, nil
                 table.clear(D.Receipts)
@@ -13727,23 +13820,24 @@ end
     features.Ball.GetMainBall = function()
         local char = localPlayer.Character
         local root = char and char.PrimaryPart
-        local best, time, distance
+        local best, time, distance, bestPriority
         local scan = root and u1070.config.auto_parry == true and F.Decision.Frame(root)
         for _, ball in ipairs(features.Ball.GetAllBalls()) do
             if compareFunction(ball) == localPlayer.Name then
                 if not root then features.Ball.Target = ball; return ball end
                 local arrival, separation
+                local priority = 0
                 if u1070.config.auto_parry == true then
                     local position, velocity = F.Decision.Read(ball, scan)
                     if not position then continue end
                     local approaching
-                    approaching, arrival, separation = F.Decision.Threat(root, position, velocity, scan)
+                    approaching, arrival, separation, priority = F.Decision.Rank(root, position, velocity, scan)
                     if not approaching then continue end
                 else
                     arrival, separation = onInputEnded(ball, root.Position)
                 end
-                if not best or arrival < time or arrival == time and separation < distance then
-                    best, time, distance = ball, arrival, separation
+                if not best or F.Decision.Prefer(priority, arrival, separation, bestPriority, time, distance) then
+                    best, time, distance, bestPriority = ball, arrival, separation, priority
                 end
             end
         end
@@ -14142,7 +14236,7 @@ features.Loop.MainParryLoop = function(line, job)
     local networkSnapshot = provider and provider.Snapshot and provider.Snapshot()
     local angleRadians = networkSnapshot and networkSnapshot.CompensationPing or previous()
     local jitter = math.min(networkSnapshot and networkSnapshot.Jitter or pingJitterMs(), 40)
-	local difference = (angleRadians + math.min(osClock - (sapphireBBState.ParryFrameAt or osClock), 0.02) * 1000) / 1000
+	local difference = (angleRadians + F.Decision.FrameBudget(osClock) * 1000) / 1000
 	sapphireBBState.ParryFrameAt = osClock
 	local openError = math.clamp(angleRadians / 10 + jitter / 8, 10, 16.7 + jitter / 8)
 	local step = math.clamp(difference * 0.5 - 0.05 + jitter / 2000, 0, 0.04 + jitter / 2000)
@@ -14206,7 +14300,7 @@ features.Loop.MainParryLoop = function(line, job)
 			elseif result68 == targetPlayerName and not index17(weld, result68) then
 				local minX = math.huge
 
-                local approaching, arrival = F.Decision.Arrival(vehicleRoot, position, velocity, scan)
+                local approaching, arrival = F.Decision.Rank(vehicleRoot, position, velocity, scan)
 				if approaching and arrival < minX then
 					mathMax += 1
 				end
@@ -14224,6 +14318,7 @@ features.Loop.MainParryLoop = function(line, job)
 	local byte = nil
 	local result68 = nil
     local abilitySelection = nil
+    local abilityPriority, selectedPriority = nil, nil
 	local net = nil
 	local slider = nil
 	local newPrice = nil
@@ -14456,13 +14551,15 @@ features.Loop.MainParryLoop = function(line, job)
 								local seat = flags.AutoAbilityEnabled and not result73 and result72 == targetPlayerName and totalTime <= maximumLength
 								local result75 = nil
 								local index58 = nil
+                                local candidatePriority = 0
 
 								if seat then
                                     local approaching
-                                    approaching, result75, index58 = F.Decision.Arrival(vehicleRoot, rayOrigin, moveDirection, scan)
+                                    approaching, result75, index58, candidatePriority = F.Decision.Rank(vehicleRoot, rayOrigin, moveDirection, scan)
                                     if not approaching then result75 = math.huge end
 
-									if approaching and (not major or result75 < major or result75 == major and index58 < byte) then
+									if approaching and (not major or F.Decision.Prefer(candidatePriority, result75, index58, abilityPriority, major, byte)) then
+                                        abilityPriority = candidatePriority
 										major = result75
 										byte = index58
 										result68 = word
@@ -14487,7 +14584,8 @@ features.Loop.MainParryLoop = function(line, job)
                                         F.Predictive.Credit(exponent, step, endPosition, isArray, tMinimum, max, center), angleRadians, osClock)
                                 end
                                 if dotProduct == word and not result73 and not bestChild and result72 == targetPlayerName then
-                                    local approaching, arrival, centerArrival = F.Decision.Arrival(vehicleRoot, rayOrigin, moveDirection, scan)
+                                    local approaching, arrival, centerArrival, priority = F.Decision.Rank(vehicleRoot, rayOrigin, moveDirection, scan)
+                                    candidatePriority = priority
                                     timingAllowed = timingAllowed and approaching
                                     if active then result75, index58 = arrival, centerArrival end
                                 end
@@ -14503,8 +14601,9 @@ features.Loop.MainParryLoop = function(line, job)
 											result75, index58 = onInputEnded(dotProduct, currentPosition, rayOrigin, moveDirection)
 										end
 
-										if not net or result75 < slider or result75 == slider and index58 < newPrice then
+										if not net or F.Decision.Prefer(candidatePriority, result75, index58, selectedPriority, slider, newPrice) then
 											bestLabel = not not (isRoblox or bestChild or result73)
+                                            selectedPriority = candidatePriority
 											net = word
                                             F.Decision.Choose(scan, word, dotProduct, ikConstraint, result72, choiceVersion, choiceCycle, choiceFrom)
 											slider = result75
@@ -14591,10 +14690,12 @@ end
         local ping = u1070.cache.adaptive_ping
         if ping then ping.RecordFrame(delta) end
         if u1070.config.auto_parry ~= true and not flags.DribbleDetection then
+            F.Decision.ResetFrameTime()
             flags.AutoParryEnabled = false
             return
         end
         if u1070.config.predictive_timing == true then F.Predictive.Observe(delta) end
+        F.Decision.ObserveFrame(delta)
         if F.AutoBusy then F.AutoPending = true; return end
         local job = {Generation = F.Decision.Generation}
         F.AutoJob, F.AutoBusy = job, true
