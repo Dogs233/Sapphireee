@@ -13813,7 +13813,11 @@ end
         initializeAutoDecision()
     end
     local bottomSnapZone, knob
+    local hotbarRefreshAt = -math.huge
     local function refreshHotbar()
+        local now = os.clock()
+        if now - hotbarRefreshAt < 0.1 then return end
+        hotbarRefreshAt = now
         local ability, hotbar = refresh()
         local block = hotbar and hotbar:FindFirstChild("Block")
         bottomSnapZone = block and block:FindFirstChildOfClass("UIGradient")
@@ -14288,10 +14292,6 @@ features.Loop.MainParryLoop = function(line, job)
 	local openError = math.clamp(angleRadians / 10 + jitter / 8, 10, 16.7 + jitter / 8)
 	local step = math.clamp(difference * 0.5 - 0.05 + jitter / 2000, 0, 0.04 + jitter / 2000)
 	local clampedY = math.clamp(tonumber(flags.ParryRange) or 0, 0, 10)
-
-	if flags.RandomizedParryRange then
-		clampedY = math.random(flags.RandomizedRangeMin or 0, flags.RandomizedRangeMax or 10)
-	end
 	local currentPosition = vehicleRoot.Position
 	local targetPlayerName = localPlayer.Name
 	local track, vertexCount = features.Detection.BlocksParry(nil, model, vehicleRoot)
@@ -14591,7 +14591,19 @@ features.Loop.MainParryLoop = function(line, job)
 
 								isInside = isInside and (openError - clampedX) * (1 - offsetZ) or 0
 								local index35 = bestChild and clampedX * (1 - offsetZ * 0.5) or 0
-								local index36 = maximumLength + clampedY + isInside + index35
+                                    local selectedRange = clampedY
+                                    if flags.RandomizedParryRange then
+                                        local minimumRange = math.clamp(math.floor(tonumber(flags.RandomizedRangeMin) or 0), 0, 10)
+                                        local maximumRange = math.clamp(math.floor(tonumber(flags.RandomizedRangeMax) or 10), minimumRange, 10)
+                                        local cycle = ikConstraint.AutoCycleVersion or 0
+                                        if ikConstraint.RandomizedRangeCycle ~= cycle then
+                                            ikConstraint.RandomizedRangeCycle = cycle
+                                            ikConstraint.RandomizedParryRange = math.random(minimumRange, maximumRange)
+                                        end
+                                        selectedRange = ikConstraint.RandomizedParryRange
+                                    end
+                                    local responseLead = math.clamp(exponent * 0.035, 0, 10)
+								local index36 = maximumLength + selectedRange + isInside + index35 + responseLead
                                 if dotProduct == word and not result73 and not bestChild and result72 == targetPlayerName and u1070.config.predictive_timing ~= true then
                                     index36 = F.Decision.TimingRadius(vehicleRoot, rayOrigin, moveDirection, index36, scan, angleRadians, step)
                                 end
@@ -14746,7 +14758,7 @@ end
         if F.AutoBusy then F.AutoPending = true; return end
         local job = {Generation = F.Decision.Generation}
         F.AutoJob, F.AutoBusy = job, true
-        local ok, err = xpcall(function() features.Loop.MainParryLoop(nil, job) end, debug.traceback)
+        local ok, err = pcall(features.Loop.MainParryLoop, nil, job)
         if not ok and job.Inflight then F.Decision.Abort(job.Inflight) end
         if F.AutoJob == job then
             F.AutoJob, F.AutoBusy = nil, false
@@ -15180,8 +15192,8 @@ end
         F.RefreshModeCard("Triggerbot", enabled)
     end
     features.Triggerbot.SetEnabled = F.SetTriggerEnabled
-    local flyteBBState = sapphireBBState
-    flyteBBState.Loaded = true
+    local sapphireAutoPlayState = sapphireBBState
+    sapphireAutoPlayState.Loaded = true
     local newCharacter = localPlayer:FindFirstChildOfClass("PlayerGui")
     local Data
     local packages = replicatedStorage:FindFirstChild("Packages")
@@ -22193,7 +22205,7 @@ do
     local autoSaved = saved.sapphire_misc_auto_play
     local autoBuilding = true
     local autoPlay = tab:create_module({
-        title = "Auto Play", description = "moves and plays automatically using Flyte's modes",
+        title = "Auto Play", description = "moves and plays automatically using the selected mode",
         section = "left", flag = "sapphire_misc_auto_play", notify = true,
         callback = function(enabled)
             if autoBuilding and autoSaved == false then enabled = false end
