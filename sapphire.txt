@@ -494,13 +494,18 @@ end
  
 function u864.normalize_curve_method(value)
     if type(value) == "table" then value = value.Name or value[1] end
+    local labels = {"Randomized Backwards", "Backwards", "BB Camera", "Camera", "Straight", "Dot", "High", "Random", "Stop"}
     if type(value) == "number" then
-        return ({"camera", "random", "camera", "backwards", "slow", "camera", "dot"})[value] or "camera"
+        return ({"Camera", "Random", "Camera", "Backwards", "Stop", "Camera", "Dot"})[math.floor(value)] or labels[math.clamp(math.floor(value), 1, #labels)]
     end
-    local name = type(value) == "string" and string.lower(value) or ""
-    if name == "back" then name = "backwards" elseif name == "down" then name = "slow" end
-    if name == "camera" or name == "dot" or name == "backwards" or name == "slow" or name == "random" then return name end
-    return "camera"
+    local name = type(value) == "string" and string.lower(value):gsub("[%s_%-]", "") or ""
+    local methods = {
+        randomizedbackwards = "Randomized Backwards", randombackwards = "Randomized Backwards",
+        backwards = "Backwards", back = "Backwards", bbcamera = "BB Camera", camera = "Camera",
+        straight = "Straight", dot = "Dot", high = "High", up = "High", random = "Random",
+        stop = "Stop", slow = "Stop", down = "Stop",
+    }
+    return methods[name] or "Camera"
 end
 
 function u864.keybind_is_clear(input)
@@ -576,7 +581,7 @@ do
                  
                 if oldName ~= "Accelerated" and oldName ~= "Up" then
                     local label = u864.normalize_curve_method(oldName)
-                    local newKey = "curve_method_" .. label:sub(1, 1):upper() .. label:sub(2)
+                    local newKey = "curve_method_" .. label:gsub("%s+", "")
                     if bindings[newKey] == nil then bindings[newKey] = value end
                 end
                 bindings[oldKey], changed = nil, true
@@ -587,7 +592,7 @@ do
     if type(bindings) == "table" then
         for _, name in ipairs({"camera", "dot", "backwards", "slow", "random"}) do
             local oldKey = "curve_method_" .. name
-            local newKey = "curve_method_" .. name:sub(1, 1):upper() .. name:sub(2)
+            local newKey = "curve_method_" .. u864.normalize_curve_method(name):gsub("%s+", "")
             if bindings[oldKey] ~= nil then
                 if bindings[newKey] == nil then bindings[newKey] = bindings[oldKey] end
                 bindings[oldKey], changed = nil, true
@@ -5827,7 +5832,7 @@ local u1070 = {
         randomize_accuracy = false,
         random_accuracy_min = 1,
         random_accuracy_max = 100,
-        curve_method = "camera",
+        curve_method = "Camera",
         parry_mode = "Remote",
         is_mobile = u1056.TouchEnabled and not u1056.MouseEnabled,
         auto_parry_animation_fix = false,
@@ -6593,7 +6598,7 @@ end
 
 u1070.emotes.cleanup = __S[3]
 u1070.emotes.load_animations()
-local u1073 = {"Camera", "Dot", "Backwards", "Slow", "Random"}
+local u1073 = {"Randomized Backwards", "Backwards", "BB Camera", "Camera", "Straight", "Dot", "High", "Random", "Stop"}
 
  
  
@@ -6995,7 +7000,7 @@ local function u1075()
 end
 
 local function u1076()
-    if u1070.config.curve_method == "camera" and u1070.config.parry_mode == "Keypress" then
+    if u864.normalize_curve_method(u1070.config.curve_method) == "Camera" and u1070.config.parry_mode == "Keypress" then
         u1075()
         return
     end
@@ -10430,32 +10435,49 @@ end
 u1070.curve.get_target_pos = __S[3]
 
 __S[3] = function(context)
-     
-    local aim = u1070.target_player and u1070.target_player.GetAim(context)
-    if aim then return aim.Frame end
     local camera = context and context.Camera or u797.CurrentCamera or u1062
-    if not camera then return u819.new() end
-    local cf = camera.CFrame
+    local cameraFrame = camera and camera.CFrame
+    if not cameraFrame then return u819.new() end
     local character = u1061.Character
-    local root = character and character:FindFirstChild("HumanoidRootPart")
-    if not root then return cf end
-    local position = u1070.curve.get_target_pos(context) or root.Position + cf.LookVector * 1000
-    local offset = position - root.Position
-    local unit = offset.Magnitude > 0.001 and offset.Unit or cf.LookVector
-    local method = u1070.config.curve_method or "camera"
-     
-    if method == "dot" then
-        return u819.lookAt(root.Position, position + Vector3.new(0, 1.75, 0))
-    elseif method == "backwards" then
-        return u819.new(root.Position, root.Position + -unit * 1000)
-    elseif method == "slow" then
-        return u819.new(root.Position, root.Position + Vector3.new(0, -350, 0))
-    elseif method == "random" then
-        return u819.new(root.Position, position + Vector3.new(math.random(-1000, 1000), math.random(-350, 1000), math.random(-1000, 1000)))
+    local root = character and (character.PrimaryPart or character:FindFirstChild("HumanoidRootPart"))
+    if not root then return cameraFrame end
+    local method = u864.normalize_curve_method(u1070.config.curve_method)
+    if method == "Camera" or method == "BB Camera" then return cameraFrame end
+    local position = u1070.curve.get_target_pos(context)
+    if not position then
+        local target = u1070.player.get_closest_to_cursor(context)
+        local targetRoot = target and (target.PrimaryPart or target:FindFirstChild("HumanoidRootPart"))
+        position = targetRoot and targetRoot.Position
     end
-    return cf
+    if method == "Randomized Backwards" then
+        local radians = math.random() * math.pi * 2
+        local angle = math.random(20, 70) / 100
+        local cf = root.CFrame
+        local direction = (-cf.LookVector + (cf.RightVector * math.cos(radians) + cf.UpVector * math.sin(radians)) * angle).Unit
+        return u819.lookAt(root.Position, root.Position + direction * 10000)
+    elseif method == "Backwards" then
+        local direction = -cameraFrame.LookVector * 10000
+        return u819.new(cameraFrame.Position, cameraFrame.Position + Vector3.new(direction.X, 0, direction.Z))
+    elseif method == "Stop" then
+        return u819.new(root.Position, root.Position + Vector3.new(0, -3500, 0))
+    elseif method == "High" then
+        return u819.new(root.Position, root.Position + Vector3.new(0, 1e8, 0))
+    elseif method == "Random" then
+        local steer = position and (position - root.Position) or cameraFrame.LookVector
+        if steer.Magnitude < 0.001 then return cameraFrame end
+        local forward = steer.Unit
+        local side = forward:Cross(math.abs(forward.Y) < 0.9 and Vector3.new(0, 1, 0) or Vector3.new(1, 0, 0)).Unit
+        local up = side:Cross(forward)
+        local angle = math.random() * math.pi * 2
+        local direction = (side * math.cos(angle) + up * math.sin(angle) - forward * (0.25 + math.random() * 0.55)).Unit
+        return u819.new(root.Position, root.Position + direction * 1500)
+    elseif position and method == "Straight" then
+        return u819.new(root.Position, position + Vector3.new(0, 10, 0))
+    elseif position and method == "Dot" then
+        return (position - root.Position).Magnitude > 0.001 and u819.lookAt(root.Position, position) or root.CFrame
+    end
+    return root.CFrame
 end
-
 u1070.curve.get_cframe = __S[3]
 
 __S[3] = function(context)
@@ -12085,7 +12107,23 @@ do
     for key, value in pairs(defaults) do flags[key] = value end
     function F.Disconnect(key)
         local conn = F.Connections[key]
-        if conn then conn:Disconnect(); F.Connections[key] = nil end
+        if not conn then return end
+        if type(conn) == "table" then
+            for _, item in pairs(conn) do
+                local itemType = type(item)
+                if (itemType == "table" or itemType == "userdata") and type(item.Disconnect) == "function" then
+                    pcall(item.Disconnect, item)
+                elseif itemType == "thread" and type(task.cancel) == "function" then
+                    pcall(task.cancel, item)
+                end
+            end
+        else
+            local connType = type(conn)
+            if (connType == "table" or connType == "userdata") and type(conn.Disconnect) == "function" then
+                pcall(conn.Disconnect, conn)
+            end
+        end
+        F.Connections[key] = nil
     end
     local function connect(key, signal, callback)
         F.Disconnect(key)
@@ -13137,6 +13175,14 @@ end
         if u1070.target_player then u1070.target_player.Destroy() end
         if u1070.oxy_manual then u1070.oxy_manual.Destroy() end
         if u1070.runtime_cache then u1070.runtime_cache.Destroy() end
+        if features.AutoPlay then pcall(features.AutoPlay.Toggle, false) end
+        if features.AFK then pcall(features.AFK.Toggle, false) end
+        if features.Stats then pcall(features.Stats.Stop) end
+        if features.Streak then pcall(features.Streak.Stop) end
+        if features.Rewards then
+            for _, item in ipairs(features.Rewards.Items or {}) do flags[item.ID] = false end
+            pcall(features.Rewards.Toggle)
+        end
         F.Destroyed = true
         u1070.triggerbot.enabled, u1070.triggerbot.connection = false, nil
         for key in pairs(F.Connections) do F.Disconnect(key) end
@@ -13788,6 +13834,7 @@ end
         flags.AutoAbilityEnabled = u1070.ability.auto_ability == true
         flags.CooldownProtectionEnabled = u1070.ability.cooldown_protection == true
         flags.AutoSpamEnabled = u1070.spam.auto_enabled == true
+        flags.ManualSpamEnabled = u1070.spam.manual_enabled == true
         flags.TriggerbotEnabled = u1070.triggerbot.enabled == true
         flags.AntiCurveEnabled, flags.BackwardsAntiCurveEnabled = true, true
     end
@@ -14742,9 +14789,10 @@ end
         elseif enabled then F.QueueAuto() end
     end
     function F.SetAutoLoop(mode)
-         
-        u1070.config.parry_loop = "PreSimulation"
-        connect("Auto Parry", runService.PreSimulation, F.StepAuto)
+        mode = mode == "PreRender" and "PreRender" or "PreSimulation"
+        u1070.config.parry_loop = mode
+        local signal = mode == "PreRender" and runService.PreRender or runService.PreSimulation
+        connect("Auto Parry", signal, F.StepAuto)
     end
     function F.OnAutoTargetChanged(ball, state, target, old)
         F.Decision.Clear(state)
@@ -15132,6 +15180,1769 @@ end
         F.RefreshModeCard("Triggerbot", enabled)
     end
     features.Triggerbot.SetEnabled = F.SetTriggerEnabled
+    local flyteBBState = sapphireBBState
+    flyteBBState.Loaded = true
+    local newCharacter = localPlayer:FindFirstChildOfClass("PlayerGui")
+    local Data
+    local packages = replicatedStorage:FindFirstChild("Packages")
+    local replionModule = packages and packages:FindFirstChild("Replion")
+    local dataModuleOk, dataModule = pcall(function() return replionModule and require(replionModule) end)
+    if dataModuleOk and dataModule and dataModule.Client then
+        pcall(function() Data = dataModule.Client:WaitReplion("Data") end)
+    end
+    Data = Data or {Get = function() return nil end, OnChange = function() return {Disconnect = function() end} end}
+    for key, value in pairs({AutoPlayEnabled = false, AutoVoteMap = false, HitFreeze = false,
+        SpamJump = false, AutoPlaySmoothness = 50, AutoPlayAggressiveness = 45,
+        AntiAFK = false, AutoPlayMode = "Play Edge", ShowWins = false, ShowElims = false,
+        ShowRAP = false, CustomStreakEnabled = false, CustomStreak = ""}) do
+        if flags[key] == nil then flags[key] = value end
+    end
+    local function getAutoPlayOpponent(character, position)
+        local folder = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
+        if not folder then return math.huge, nil, 0 end
+        smallest = folder
+        local queue = folder:GetChildren()
+        local bestDistance, bestRoot = math.huge, nil
+        for _, other in ipairs(queue) do
+            if other ~= character then
+                local root = other:IsA("BasePart") and other or other:IsA("Model") and (other.PrimaryPart or other:FindFirstChild("HumanoidRootPart"))
+                if root and root.Parent then
+                    local distance = (position - root.Position).Magnitude
+                    if distance < bestDistance then bestDistance, bestRoot = distance, root end
+                end
+            end
+        end
+        return bestDistance, bestRoot, #queue
+    end
+
+for key, value in pairs({CustomStreakEnabled = false, CustomStreak = "", ShowWins = false, ShowElims = false, ShowRAP = false}) do if flags[key] == nil then flags[key] = value end end
+features.Streak = { Originals = {} }
+
+features.Streak.Get = function()
+	local userId = tonumber(tostring(flags.CustomStreak or ""):match("^%s*(.-)%s*$"))
+	return userId and math.max(0, math.floor(userId))
+end
+
+features.Streak.Format = function(line)
+	return (tostring(line):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", ""))
+end
+
+features.Streak.Set = function(line, object, descendant)
+	if not features.Streak.Originals[line] then
+		features.Streak.Originals[line] = { object, line[object] }
+	end
+
+	if line[object] ~= descendant then
+		line[object] = descendant
+	end
+end
+
+features.Streak.RestoreObject = function(line)
+	local radians = features.Streak.Originals[line]
+	if not radians then
+		return
+	end
+
+	if line.Parent then
+		line[radians[1]] = radians[2]
+	end
+
+	features.Streak.Originals[line] = nil
+end
+
+features.Streak.Restore = function()
+	for vertex, particle in pairs(features.Streak.Originals) do
+		if vertex.Parent then
+			vertex[particle[1]] = particle[2]
+		end
+	end
+
+	table.clear(features.Streak.Originals)
+end
+
+sapphireBBState.StreakRestore = features.Streak.Restore
+
+features.Streak.Refresh = function(line)
+	local radians = features.Streak.Originals[line]
+
+	if radians then
+		radians[2] = line[radians[1]]
+	end
+
+	coroutineFunction("Streak Display")
+	coroutineFunction("Streak Value")
+	coroutineFunction("Streak Flame")
+	features.Streak.Value = nil
+	task.defer(features.Streak.ApplyDisplay)
+end
+
+features.Streak.Profile = function()
+	local result38 = newCharacter:FindFirstChild("ProfileCard")
+	local objects = result38 and result38:FindFirstChild("Customize") and result38.Customize:FindFirstChild("Profile")
+	local result36 = objects and objects:FindFirstChild("PlayerProfile")
+	result36 = result36 and result36:FindFirstChild("Details")
+	objects = objects and objects:FindFirstChild("Achievements")
+	return result36 and result36:FindFirstChild("Username"), objects and objects:FindFirstChild("Scrollingframe")
+end
+
+features.Streak.ApplyDisplay = function()
+	if not flags.CustomStreakEnabled then
+		return
+	end
+	local model = localPlayer.Character
+	local guiClone = model and model:FindFirstChild("WinStreakDisplay", true)
+
+	if not guiClone and model then
+		local nearestPlayer = model:FindFirstChild("Head")
+		local leaderstats = replicatedStorage:FindFirstChild("Assets")
+		local template = leaderstats and leaderstats:FindFirstChild("UI")
+		template = template and template:FindFirstChild("WinStreakDisplay")
+
+		if nearestPlayer and template then
+			guiClone = template:Clone()
+			guiClone.Adornee = nearestPlayer
+			features.Streak.Display = guiClone
+			guiClone.Parent = model
+		end
+	end
+
+	local result22 = guiClone and guiClone:FindFirstChild("Main")
+	local yString = result22 and result22:FindFirstChild("Value")
+	local Lighting = result22 and result22:FindFirstChild("Icon")
+	if not yString or not Lighting then
+		return
+	end
+	local radians = features.Streak.Get()
+	if not radians then
+		return
+	end
+	local query = "<b><stroke color='rgb(0, 0, 0)' thickness='2'>" .. features.Streak.Format(radians) .. "</stroke></b>"
+	local concatenated = radians >= 10 and "rbxassetid://75598166115655" or "rbxassetid://89658127170771"
+	features.Streak.Set(guiClone, "Enabled", true)
+	features.Streak.Set(yString, "Text", query)
+	features.Streak.Set(Lighting, "Image", concatenated)
+
+	if features.Streak.Value ~= yString then
+		coroutineFunction("Streak Display")
+		coroutineFunction("Streak Value")
+		coroutineFunction("Streak Flame")
+		features.Streak.Value = yString
+
+		sapphireBBState.Connections["Streak Display"] = guiClone:GetPropertyChangedSignal("Enabled"):Connect(function()
+				features.Streak.Refresh(guiClone)
+			end)
+
+		sapphireBBState.Connections["Streak Value"] = yString:GetPropertyChangedSignal("Text"):Connect(function()
+				features.Streak.Refresh(yString)
+			end)
+
+		sapphireBBState.Connections["Streak Flame"] = Lighting:GetPropertyChangedSignal("Image"):Connect(function()
+				features.Streak.Refresh(Lighting)
+			end)
+	end
+end
+
+features.Streak.ApplyProfile = function()
+	if not flags.CustomStreakEnabled then
+		return
+	end
+	local radians = features.Streak.Get()
+	if not radians then
+		return
+	end
+	local cell = radians > (tonumber(Data:Get("TotalStats.BestWinStreak")) or 0)
+	local angleRadians = features.Streak.Format(radians)
+	local objects = newCharacter:FindFirstChild("Profile")
+	objects = objects and objects:FindFirstChild("BestWinStreak", true)
+	objects = objects and objects:FindFirstChild("Value")
+
+	if objects then
+		if cell then
+			features.Streak.Set(objects, "Text", angleRadians .. " Wins")
+		else
+			features.Streak.RestoreObject(objects)
+		end
+	end
+
+	local track, vertexCount = features.Streak.Profile()
+	if not track or track.Text ~= "@" .. localPlayer.Name or not vertexCount then
+		return
+	end
+
+	for _, info in vertexCount:GetChildren() do
+		local inputBox = info:FindFirstChild("Title")
+		local item = info:FindFirstChild("Description")
+
+		if inputBox and item and inputBox.Text == "Best Win Streak" then
+			if cell then
+				features.Streak.Set(item, "Text", angleRadians)
+			else
+				features.Streak.RestoreObject(item)
+			end
+
+			break
+		end
+	end
+end
+
+features.Streak.BindCharacter = function(line)
+	coroutineFunction("Streak Character UI")
+
+	sapphireBBState.Connections["Streak Character UI"] = line.DescendantAdded:Connect(function(hit)
+			if hit.Name == "WinStreakDisplay" or hit.Name == "Value" or hit.Name == "Icon" then
+				if hit.Name == "WinStreakDisplay" and features.Streak.Display and hit ~= features.Streak.Display then
+					features.Streak.Display:Destroy()
+					features.Streak.Display = nil
+				end
+
+				task.defer(features.Streak.ApplyDisplay)
+			end
+		end)
+
+	features.Streak.ApplyDisplay()
+end
+
+features.Streak.Stop = function()
+	for _, particle in pairs({
+		"Streak Character",
+		"Streak Character UI",
+		"Streak Display",
+		"Streak Value",
+		"Streak Flame",
+		"Streak Profile",
+		"Streak Profile Items",
+		"Streak Best",
+	}) do
+		coroutineFunction(particle)
+	end
+
+	features.Streak.Restore()
+	local model = localPlayer.Character
+	local splitHorizontally = features.Streak.Display and model
+
+	if splitHorizontally then
+		splitHorizontally = (tonumber(model:GetAttribute("Killstreak")) or 0) > 0
+	end
+
+	if features.Streak.Display then
+		features.Streak.Display:Destroy()
+		features.Streak.Display = nil
+	end
+
+	if splitHorizontally then
+		firesignal(model:GetAttributeChangedSignal("Killstreak"))
+	end
+
+	features.Streak.Value = nil
+end
+
+features.Streak.Toggle = function(other)
+	flags.CustomStreakEnabled = other
+	features.Streak.Stop()
+	if not other or not features.Streak.Get() then
+		return
+	end
+	sapphireBBState.Connections["Streak Character"] = localPlayer.CharacterAdded:Connect(features.Streak.BindCharacter)
+
+	sapphireBBState.Connections["Streak Best"] = Data:OnChange("TotalStats.BestWinStreak", function()
+			task.defer(features.Streak.ApplyProfile)
+		end)
+
+	local radians, angleRadians = features.Streak.Profile()
+
+	if radians then
+		sapphireBBState.Connections["Streak Profile"] = radians:GetPropertyChangedSignal("Text"):Connect(features.Streak.ApplyProfile)
+	end
+
+	if angleRadians then
+		sapphireBBState.Connections["Streak Profile Items"] = angleRadians.ChildAdded:Connect(function()
+				task.defer(features.Streak.ApplyProfile)
+			end)
+	end
+
+	if localPlayer.Character then
+		features.Streak.BindCharacter(localPlayer.Character)
+	end
+
+	features.Streak.ApplyProfile()
+end
+
+
+
+features.Stats = {
+	Connections = {},
+	Originals = setmetatable({}, { __mode = "k" }),
+	Writing = setmetatable({}, { __mode = "k" }),
+	Info = {
+	Wins = {
+	Attribute = "PlayerWins",
+	Config = "ShowWins",
+	Leaderstat = "Wins",
+	Profile = "Wins",
+},
+	Elims = {
+	Attribute = "PlayerElims",
+	Config = "ShowElims",
+	Leaderstat = "Elims",
+	Profile = "Kills",
+},
+	RAP = { Attribute = "TotalRAP", Config = "ShowRAP", Profile = "Rap" },
+},
+}
+
+features.Stats.Connect = function(line, object)
+	features.Stats.Connections[#features.Stats.Connections + 1] = line:Connect(object)
+end
+
+features.Stats.ConnectProfile = function(line, object)
+	features.Stats.ProfileConnections = features.Stats.ProfileConnections or {}
+	features.Stats.ProfileConnections[#features.Stats.ProfileConnections + 1] = line:Connect(object)
+end
+
+features.Stats.RestoreProfile = function()
+	local neighborIterator = features.Stats.ProfileOriginal or {}
+
+	for _, particle in pairs(neighborIterator) do
+		if particle.Button.Parent then
+			features.Stats.Writing[particle.Button] = true
+			features.Stats.Writing[particle.Amount] = true
+			particle.Button.Visible = particle.Visible
+			particle.Amount.Text = particle.Text
+			features.Stats.Writing[particle.Button] = nil
+			features.Stats.Writing[particle.Amount] = nil
+		end
+	end
+end
+
+features.Stats.ClearProfile = function(line)
+	local matchIterator = features.Stats.ProfileConnections or {}
+
+	for _, particle in pairs(matchIterator) do
+		particle:Disconnect()
+	end
+
+	table.clear(features.Stats.ProfileConnections or {})
+
+	if line then
+		features.Stats.RestoreProfile()
+	end
+
+	features.Stats.ProfileOriginal = nil
+end
+
+features.Stats.Stop = function()
+	for _, particle in pairs(features.Stats.Connections) do
+		particle:Disconnect()
+	end
+
+	table.clear(features.Stats.Connections)
+
+	for vertex, particle in pairs(features.Stats.Originals) do
+		if vertex.Parent then
+			features.Stats.Writing[vertex] = true
+			vertex.Value = particle
+			features.Stats.Writing[vertex] = nil
+		end
+	end
+
+	features.Stats.ClearProfile(true)
+	table.clear(features.Stats.Originals)
+end
+
+features.Stats.SetValue = function(line, object, descendant)
+	if features.Stats.Originals[descendant] ~= nil then
+		return
+	end
+	features.Stats.Originals[descendant] = descendant.Value
+
+	local function onInputEnded()
+		local callbackFunction = line:GetAttribute(object.Attribute)
+
+		if flags[object.Config] and features.Stats.Originals[descendant] == 0 and type(callbackFunction) == "number" and callbackFunction > 0 and descendant.Value ~= callbackFunction then
+			features.Stats.Writing[descendant] = true
+			descendant.Value = callbackFunction
+			features.Stats.Writing[descendant] = nil
+		end
+	end
+
+	features.Stats.Connect(descendant:GetPropertyChangedSignal("Value"), function()
+			if features.Stats.Writing[descendant] then
+				return
+			end
+			features.Stats.Originals[descendant] = descendant.Value
+			onInputEnded()
+		end)
+
+	features.Stats.Connect(line:GetAttributeChangedSignal(object.Attribute), onInputEnded)
+	onInputEnded()
+end
+
+features.Stats.BindPlayer = function(line)
+	local function onInputEnded(object)
+		for _, particle in pairs(features.Stats.Info) do
+			if particle.Leaderstat and flags[particle.Config] then
+				local angleRadians = object:FindFirstChild(particle.Leaderstat)
+
+				if angleRadians and angleRadians:IsA("ValueBase") then
+					features.Stats.SetValue(line, particle, angleRadians)
+				end
+			end
+		end
+
+		features.Stats.Connect(object.ChildAdded, function(descendant)
+				for _, particle in pairs(features.Stats.Info) do
+					if particle.Leaderstat and flags[particle.Config] and descendant.Name == particle.Leaderstat and descendant:IsA("ValueBase") then
+						features.Stats.SetValue(line, particle, descendant)
+						break
+					end
+				end
+			end)
+	end
+
+	local result19 = line:FindFirstChild("leaderstats")
+
+	if result19 then
+		onInputEnded(result19)
+	else
+		features.Stats.Connect(line.ChildAdded, function(object)
+				if object.Name == "leaderstats" then
+					onInputEnded(object)
+				end
+			end)
+	end
+end
+
+features.Stats.FormatRAP = function(line)
+	local difference = 1
+	local query
+
+	if line >= 1e12 then
+		query = "T"
+		difference = 1e12
+	elseif line >= 1e9 then
+		query = "B"
+		difference = 1e9
+	elseif line >= 1000000 then
+		query = "M"
+		difference = 1000000
+	else
+		query = ""
+
+		if line >= 1000 then
+			query = "K"
+			difference = 1000
+		end
+	end
+
+	if difference == 1 then
+		return tostring(math.floor(line))
+	end
+	local openError = math.floor(line / difference * 10) / 10
+	return (openError % 1 == 0 and tostring(math.floor(openError)) or tostring(openError)) .. query .. (line > 1000 and "+" or "")
+end
+
+features.Stats.GetProfile = function()
+	local result38 = newCharacter:FindFirstChild("ProfileCard")
+	local playerCharacter = result38 and result38:FindFirstChild("Customize")
+	local objects = playerCharacter and playerCharacter:FindFirstChild("Profile")
+	objects = objects and objects:FindFirstChild("PlayerProfile")
+	local elevatorModel = objects and objects:FindFirstChild("Details")
+	return result38, elevatorModel and elevatorModel:FindFirstChild("Username"), objects and objects:FindFirstChild("Stats")
+end
+
+features.Stats.ShowProfile = function(line, object, descendant, radius)
+	local callbackFunction = radius:GetAttribute(object.Attribute)
+	if not flags[object.Config] or not descendant or descendant.Visible or type(callbackFunction) ~= "number" then
+		return
+	end
+	features.Stats.Writing[descendant.Button] = true
+	features.Stats.Writing[descendant.Amount] = true
+	descendant.Button.Visible = true
+	descendant.Amount.Text = line == "RAP" and features.Stats.FormatRAP(callbackFunction) or features.Streak.Format(callbackFunction)
+	features.Stats.Writing[descendant.Button] = nil
+	features.Stats.Writing[descendant.Amount] = nil
+end
+
+features.Stats.ApplyProfile = function()
+	local radians, targetName, angleRadians = features.Stats.GetProfile()
+	targetName = targetName and targetName.Text:match("^@(.+)$")
+	local track = targetName and playersService:FindFirstChild(targetName)
+	if not radians or not radians.Enabled or not angleRadians or not track then
+		return
+	end
+
+	if not features.Stats.ProfileOriginal then
+		features.Stats.ProfileOriginal = {}
+
+		for vertex, modelName in pairs(features.Stats.Info) do
+			local steering = angleRadians:FindFirstChild(modelName.Profile)
+			local xCoordinate = steering and steering:FindFirstChild("Amount")
+
+			if steering and xCoordinate then
+				features.Stats.ProfileOriginal[vertex] = { Button = steering, Amount = xCoordinate, Visible = steering.Visible, Text = xCoordinate.Text }
+				local major = features.Stats.ProfileOriginal[vertex]
+
+				features.Stats.ConnectProfile(steering:GetPropertyChangedSignal("Visible"), function()
+						if not features.Stats.Writing[steering] then
+							major.Visible = steering.Visible
+							features.Stats.ShowProfile(vertex, modelName, major, track)
+						end
+					end)
+
+				features.Stats.ConnectProfile(xCoordinate:GetPropertyChangedSignal("Text"), function()
+						if not features.Stats.Writing[xCoordinate] then
+							major.Text = xCoordinate.Text
+							features.Stats.ShowProfile(vertex, modelName, major, track)
+						end
+					end)
+			end
+		end
+	end
+
+	features.Stats.RestoreProfile()
+
+	for vertex, modelName in pairs(features.Stats.Info) do
+		features.Stats.ShowProfile(vertex, modelName, features.Stats.ProfileOriginal[vertex], track)
+	end
+end
+
+features.Stats.QueueProfile = function()
+	if features.Stats.ProfileQueued then
+		return
+	end
+	features.Stats.ProfileQueued = true
+	features.Stats.ClearProfile(false)
+
+	task.defer(function()
+			features.Stats.ProfileQueued = nil
+			features.Stats.ApplyProfile()
+		end)
+end
+
+features.Stats.Toggle = function()
+	features.Stats.Stop()
+	if not flags.ShowWins and not flags.ShowElims and not flags.ShowRAP then
+		return
+	end
+
+	if flags.ShowWins or flags.ShowElims then
+		features.Stats.Connect(playersService.PlayerAdded, features.Stats.BindPlayer)
+
+		for _, particle in playersService:GetPlayers() do
+			features.Stats.BindPlayer(particle)
+		end
+	end
+
+	local radians, angleRadians = features.Stats.GetProfile()
+
+	if radians then
+		features.Stats.Connect(radians:GetPropertyChangedSignal("Enabled"), function()
+				if radians.Enabled then
+					features.Stats.QueueProfile()
+				end
+			end)
+	end
+
+	if angleRadians then
+		local onTouch = features.Stats.QueueProfile
+		features.Stats.Connect(angleRadians:GetPropertyChangedSignal("Text"), onTouch)
+	end
+
+	features.Stats.QueueProfile()
+end
+
+features.Stats.Queue = function()
+	if features.Stats.Queued then
+		return
+	end
+	features.Stats.Queued = true
+
+	task.defer(function()
+			features.Stats.Queued = nil
+			features.Stats.Toggle()
+		end)
+end
+
+
+features.LoadRewards = function()
+	local instance5 = { Items = {} }
+	features.Rewards = instance5
+	local tween = replicatedStorage.Controllers
+	local ffi = require(replicatedStorage.Shared.InfiniteBattlepass.InfiniteBattlepassData)
+	local hullIterator = nil
+	local position = nil
+	local visited = nil
+	local lines = {}
+	local sourceTable = {}
+
+	local function onInputEnded(...)
+		local result35 = localPlayer.PlayerGui
+
+		for _, particle in pairs({ ... }) do
+			result35 = result35:FindFirstChild(particle)
+			if not result35 then
+				return
+			end
+		end
+
+		return result35
+	end
+
+	instance5.Notify = function(line, object)
+		local radians = uiElements and uiElements.toggles[line]
+
+		if sapphireBBState.Loaded and flags[line] and radians and radians.notify and type(object) == "string" and object ~= "" then
+			u864.SendNotification({title = "Rewards", text = "Got " .. object, duration = 3})
+		end
+	end
+
+	local function handlePlayerRemoving(line, object, descendant, radius, zCoordinate)
+		flags[line] = false
+		instance5.Items[#instance5.Items + 1] = { ID = line, Name = object, Run = descendant, Interval = radius or 5, Next = 0, Notify = zCoordinate }
+	end
+
+	local function onTouched(line, object, descendant, radius, zCoordinate, alpha)
+		if not object or not object.Visible or lines[object] then
+			return false
+		end
+		local radians = getconnections
+		local query = alpha or "Activated"
+
+		for _, existingPlayer in radians(object[query]) do
+			if existingPlayer.Enabled and existingPlayer.Function and getfenv(existingPlayer.Function).script == descendant then
+				lines[object] = { ID = line, Check = radius, Names = zCoordinate }
+				existingPlayer:Fire()
+				return true
+			end
+		end
+
+		return false
+	end
+
+	handlePlayerRemoving("Claim_Daily_Rewards", "Auto Claim Daily", function()
+			local value = Data:Get("CurrentDailyLoginType")
+			local radians = Data:Get({ "DailyLoginData", value })
+			local cell = (value == "D30" or value == "Longterm") and radians and type(radians.NextClaim) == "number"
+
+			if cell then
+				local accumulator = radians.NextClaim
+				cell = workspace:GetServerTimeNow() >= accumulator
+			end
+
+			if cell then
+				local head = onInputEnded("DailyLogin_" .. value .. "_Rewards")
+
+				if head then
+					local active = value == "D30" and head.Page.Rewards:FindFirstChild("Day" .. radians.DaysClaimedStreak + 1, true)
+
+					if active then
+						head = active
+					else
+						head = value == "Longterm" and head.Frame.Claim
+					end
+				end
+
+				local accumulator = radians.NextClaim
+
+				onTouched("Claim_Daily_Rewards", head, tween.UI.DailyLoginController, function()
+					return Data:Get({ "DailyLoginData", value, "NextClaim" }) ~= accumulator
+				end)
+			end
+
+			local character = ffi.isEnabled() and onInputEnded("BattlepassDailyLogin", "Background", "Frame", "ScrollingFrame")
+
+			if character then
+				for _, existingPlayer in character:GetChildren() do
+					if existingPlayer:GetAttribute("State") == "Claimable" then
+						local userId = tonumber(existingPlayer.Day.Text:match("%d+"))
+
+						if userId then
+							onTouched("Claim_Daily_Rewards", existingPlayer.Claim, localPlayer.PlayerScripts.Client.UIBinders.BattlepassDailyLogin, function()
+								return table.find(Data:Get("NewDailyLoginAwardList") or {}, userId) ~= nil
+							end)
+						end
+
+						break
+					end
+				end
+			end
+
+			local parent = Data:Get("WelcomeBackEvent")
+			local active
+
+			if parent then
+				active = workspace:GetServerTimeNow() < (parent.EventEndTime or 0)
+			else
+				active = parent
+			end
+
+			active = active and onInputEnded("NewWelcomeBack", "Frame", "Views", "Login", "Days")
+
+			if active then
+				for _, existingPlayer in active:GetChildren() do
+					local head = existingPlayer:FindFirstChild("Claim")
+					local leftIndex = head and existingPlayer.LayoutOrder
+
+					if head and head.Visible and leftIndex <= parent.DailyLoginStreak and not parent.ClaimedDailyRewards[leftIndex] then
+						onTouched("Claim_Daily_Rewards", head, tween.WelcomeBackController.EventControllers.Login, function()
+							local vehicle = Data:Get("WelcomeBackEvent")
+							return vehicle and vehicle.ClaimedDailyRewards[leftIndex] == true
+						end, nil, "MouseButton1Click")
+
+						break
+					end
+				end
+			end
+		end)
+
+	handlePlayerRemoving("Claim_Playtime_Rewards", "Auto Claim Playtime", function()
+			hullIterator = hullIterator or require(replicatedStorage.Common.PlaytimeRewardsInfo).Rewards
+			position = position or require(replicatedStorage.Shared.Battlepass.BattlepassPlaytimeRewardsData)
+			visited = visited or require(replicatedStorage.Shared.Quests)
+			local humanoid = Data:Get("PlaytimeRewardsData")
+
+			if humanoid then
+				for vertex, particle in pairs(hullIterator) do
+					local cell = not humanoid.ClaimedRewards[tostring(vertex)]
+
+					if cell then
+						local difference = humanoid.TimerStart + particle.Duration
+						cell = workspace:GetServerTimeNow() >= difference
+					end
+
+					if cell then
+						local result37 = tween.UI.PlaytimeRewardsController
+
+						onTouched("Claim_Playtime_Rewards", onInputEnded("PlaytimeRewards", "PlaytimeRewards", "Page", "List", "RewardsList", tostring(vertex), "ClaimButton"), result37, function()
+							return Data:Get({ "PlaytimeRewardsData", "ClaimedRewards", tostring(vertex) }) == true
+						end)
+
+						break
+					end
+				end
+			end
+
+			if ffi.isEnabled() then
+				local message = Data:Get("ClaimedPlaytimeRewards") or {}
+
+				for vertex, particle in pairs(position) do
+					if particle.Seconds <= (Data:Get("SecondsPlayedToday") or 0) and not table.find(message, vertex) then
+						local success = onInputEnded("BattlepassPlaytimeRewards", "PlaytimeRewards", "MainFrame", "Grid", tostring(vertex))
+
+						onTouched("Claim_Playtime_Rewards", success and success.Claim.Claim, tween.Battlepass.BattlepassPlaytimeRewardsController, function()
+							return table.find(Data:Get("ClaimedPlaytimeRewards") or {}, vertex) ~= nil
+						end)
+
+						break
+					end
+				end
+			end
+
+			local count = Data:Get("CurrentQuests") or {}
+
+			for _, particle in pairs(count) do
+				local cell = visited[particle]
+
+				if cell then
+					cell = (Data:Get({ "QuestStats", cell.stat }) or 0) >= cell.goal
+				end
+
+				if cell then
+					cell = not table.find(Data:Get("QuestsAwarded") or {}, particle)
+				end
+
+				if cell then
+					local result39 = tween.UI.QuestsController
+
+					onTouched("Claim_Playtime_Rewards", onInputEnded("NewDailyQuests", "Holder", "Quests", particle, "Intermediate"), result39, function()
+						return table.find(Data:Get("QuestsAwarded") or {}, particle) ~= nil
+					end)
+				end
+			end
+		end)
+
+	if ffi.isEnabled() then
+		handlePlayerRemoving("Claim_Battlepass_Rewards", "Auto Claim Battlepass", function()
+				if not ffi.isEnabled() then
+					return
+				end
+				local player = onInputEnded("Battlepass", "Main", "Background", "Left", "ClaimAll")
+				if not player or not player.Visible or lines[player] then
+					return
+				end
+				local status = Data:Get("InfiniteBattlepass")
+				local players = {}
+				local success5 = ffi.SeasonData.Rewards.getTierFromXP
+				local index60 = status.Quests.XP or 0
+
+				for k = 1, success5(index60) do
+					local radians = ffi.SeasonData.Rewards.getReward(k, localPlayer)
+
+					for _, existingPlayer in pairs({ "Free", "Premium" }) do
+						if radians and radians[existingPlayer:lower()] and (existingPlayer == "Free" or status.Premium == true) and not status.Claimed[existingPlayer][tostring(k)] then
+							players[#players + 1] = { existingPlayer, tostring(k) }
+						end
+					end
+				end
+
+				if #players == 0 then
+					return
+				end
+
+				onTouched("Claim_Battlepass_Rewards", player, tween.Battlepass.BattlepassTierController, function()
+					local RunService = Data:Get("InfiniteBattlepass.Claimed")
+
+					for _, particle in pairs(players) do
+						if not RunService[particle[1]][particle[2]] then
+							return false
+						end
+					end
+
+					return true
+				end)
+			end)
+	end
+
+	handlePlayerRemoving("Auto_Wheel_Spins", "Auto Spin Wheel", function()
+			local index47 = Data:Get("rolls") or 0
+			if index47 <= 0 then
+				return
+			end
+			local humanoidRootPart = onInputEnded("Wheel", "Default")
+			if not humanoidRootPart or humanoidRootPart:GetAttribute("Spinning") then
+				return
+			end
+			local instance9 = humanoidRootPart.WheelMenu
+
+			onTouched("Auto_Wheel_Spins", instance9.Button.SpinButton, humanoidRootPart.SpinWheelClient, function()
+				return (Data:Get("rolls") or 0) < index47 and not humanoidRootPart:GetAttribute("Spinning")
+			end, function()
+				return instance9.Win.Text:match("^You won (.-)!$")
+			end)
+		end, 12, true)
+
+	if ffi.isEnabled() then
+		local cell = require(replicatedStorage.Shared.BattlepassUIType) == "Window"
+
+		local function heartbeatUpdate(player17, line)
+			if not ffi.isEnabled() or Data:Get("InfiniteBattlepass.UseSteps") then
+				return
+			end
+
+			if os.clock() < (instance5.SpinUntil or 0) then
+				return
+			end
+			local difference = Data:Get("InfGachaRounds" .. ffi.Season) or 0
+
+			if line then
+				local active = difference > 0 or ffi.SeasonData.Currency.Name ~= "Gold"
+
+				if not active then
+					active = Data:Get("CanPurchaseInfGachaRounds" .. ffi.Season .. "DailyExtra") ~= true
+				end
+
+				if not active then
+					active = (Data:Get("InfiniteBattlepass.Currency") or 0) < 400
+				end
+
+				if active then
+					return
+				end
+			elseif difference <= 0 then
+				return
+			end
+
+			local node = cell and onInputEnded("BattlepassSpinGacha", "Main") or onInputEnded("Battlepass", "Main", "Background", "Views", "SpinGacha")
+			local radians = instance5
+			local angleRadians = instance5
+			local track = 15
+			local index52 = os.clock() + track
+			radians.SpinID = player17
+			angleRadians.SpinUntil = index52
+
+			if not onTouched(player17, node and node.Background.Spin.Spin, tween.Battlepass.BattlepassSpinGachaController, function()
+					local active = line and Data:Get("CanPurchaseInfGachaRounds" .. ffi.Season .. "DailyExtra") ~= true
+
+					if not active then
+						active = not line
+
+						if active then
+							active = (Data:Get("InfGachaRounds" .. ffi.Season) or 0) < difference
+						end
+					end
+
+					return active
+				end) then
+				local vertexCount = instance5
+				instance5.SpinID = nil
+				vertexCount.SpinUntil = nil
+			end
+		end
+
+		handlePlayerRemoving("Auto_Battlepass_Spins", "Auto Battlepass", function()
+				heartbeatUpdate("Auto_Battlepass_Spins", false)
+			end, 12, true)
+
+		handlePlayerRemoving("Auto_Gold_Spin", "Auto Kraken Spin", function()
+				heartbeatUpdate("Auto_Gold_Spin", true)
+			end, 14, true)
+	end
+
+	instance5.Step = function()
+		for vertex, particle in pairs(lines) do
+			if particle.Check() then
+				lines[vertex] = nil
+				instance5.Notify(particle.ID, type(particle.Names) == "function" and particle.Names() or particle.Names)
+			elseif not vertex.Parent then
+				lines[vertex] = nil
+			end
+		end
+
+		for _, particle in pairs(instance5.Items) do
+			local cell = flags[particle.ID]
+
+			if cell then
+				local index41 = particle.Next
+				cell = os.clock() >= index41
+			end
+
+			if cell then
+				local index27 = particle.Interval
+				particle.Next = os.clock() + index27
+
+				if not pcall(particle.Run) then
+					particle.Next = os.clock() + 30
+				end
+			end
+		end
+	end
+
+	instance5.Toggle = function()
+		if not sapphireBBState.Loaded then
+			return
+		end
+		local cell = false
+
+		for _, particle in pairs(instance5.Items) do
+			if flags[particle.ID] then
+				cell = true
+				break
+			end
+		end
+
+		if not cell then
+			coroutineFunction("Rewards")
+			return
+		end
+
+		if sapphireBBState.Connections.Rewards then
+			return
+		end
+		local result41 = {}
+		sapphireBBState.Connections.Rewards = result41
+
+		result41.Results = replicatedStorage.Remote.RemoteEvent.OnClientEvent:Connect(function(line, object, descendant)
+				local canUseCoyote = instance5.SpinID
+
+				if canUseCoyote then
+					local index52 = instance5.SpinUntil
+					canUseCoyote = os.clock() <= index52
+				end
+
+				if canUseCoyote and type(descendant) == "table" then
+					if line == "GachaSpinStartBottom" then
+						local radians = sourceTable
+						local result6 = {}
+						local result50 = instance5.SpinID
+						local moduleName = descendant.DisplayName or descendant.ItemName
+						result6[1] = result50
+						result6[2] = moduleName
+						radians.GachaSpinEndBottom = result6
+					elseif line == "GachaSpinStartTop" then
+						local radians = sourceTable
+						local result7 = {}
+						local result50 = instance5.SpinID
+						local moduleName = descendant.DisplayName or descendant.ItemName
+						result7[1] = result50
+						result7[2] = moduleName
+						radians.GachaSpinEndTop = result7
+					end
+				end
+
+				local radians = sourceTable[line]
+
+				if radians then
+					sourceTable[line] = nil
+					instance5.Notify(radians[1], radians[2])
+				end
+			end)
+
+		result41.Loop = task.spawn(function()
+				while sapphireBBState.Loaded and sapphireBBState.Connections.Rewards == result41 do
+					instance5.Step()
+					task.wait(1)
+				end
+			end)
+	end
+end
+
+pcall(features.LoadRewards)
+for key, value in pairs({
+	AutoPlayEnabled = false,
+	AutoVoteMap = false,
+	HitFreeze = false,
+	SpamJump = false,
+	AutoPlaySmoothness = 50,
+	AutoPlayAggressiveness = 45,
+	AntiAFK = false,
+	AutoRejoinExecute = false,
+	ScriptKey = "",
+	AutoPlayMode = "Play Edge",}) do if flags[key] == nil then flags[key] = value end end
+
+features.AFK = {}
+
+features.AFK.Toggle = function(line)
+	sapphireBBState.AFKConnections = sapphireBBState.AFKConnections or {}
+
+	for _, particle in pairs(sapphireBBState.AFKConnections) do
+		if not particle.Enabled then
+			particle:Enable()
+		end
+	end
+
+	table.clear(sapphireBBState.AFKConnections)
+	if not line then
+		return
+	end
+
+	for _, particle in getconnections(localPlayer.Idled) do
+		if particle.Enabled then
+			particle:Disable()
+			table.insert(sapphireBBState.AFKConnections, particle)
+		end
+	end
+end
+
+features.AutoPlay = { Direction = 1, Voting = {} }
+
+features.AutoPlay.Jump = function(line, object)
+	if not line then
+		features.AutoPlay.DoubleJumped = nil
+		features.AutoPlay.JumpAt = nil
+		return
+	end
+
+	local model = localPlayer.Character
+	model = model and model:FindFirstChildOfClass("Humanoid")
+	if not model then
+		return
+	end
+
+	if model.FloorMaterial ~= Enum.Material.Air then
+		model:ChangeState(Enum.HumanoidStateType.Jumping)
+		features.AutoPlay.DoubleJumped = false
+		features.AutoPlay.JumpAt = os.clock()
+	else
+		local cell = object and not features.AutoPlay.DoubleJumped
+
+		if cell then
+			cell = os.clock() - (features.AutoPlay.JumpAt or 0) >= 0.12
+		end
+
+		if cell then
+			features.AutoPlay.DoubleJumped = true
+			firesignal(u1056.JumpRequest)
+		end
+	end
+end
+
+features.AutoPlay.VoteMode = function(line)
+	local RoundStateEnum = features.AutoPlay.Voting
+	local bloomEffect = localPlayer.PlayerGui:FindFirstChild("voter")
+
+	if not bloomEffect or not bloomEffect.Enabled then
+		RoundStateEnum.Mode = nil
+		RoundStateEnum.ModeAt = nil
+		return
+	end
+
+	if RoundStateEnum.Mode ~= bloomEffect then
+		RoundStateEnum.Mode = bloomEffect
+		RoundStateEnum.ModeAt = line + 0.25 + math.random() * 0.5
+	end
+
+	if not RoundStateEnum.ModeAt or line < RoundStateEnum.ModeAt then
+		return
+	end
+	RoundStateEnum.ModeAt = nil
+	local toolInstance = bloomEffect:FindFirstChild("Frame")
+	toolInstance = toolInstance and toolInstance:FindFirstChild("1")
+	local radians = toolInstance and toolInstance:FindFirstChildWhichIsA("TextLabel", true)
+
+	if toolInstance and radians and radians.Text == "Classic" then
+		firesignal(toolInstance.Activated)
+	end
+end
+
+features.AutoPlay.VoteMap = function(line, object, descendant, radius)
+	local RoundStateEnum = features.AutoPlay.Voting
+	local character3 = radius:FindFirstChild("GUI")
+	local character5 = character3 and character3:FindFirstChild("SurfaceGui")
+	local square = character5 and character5:FindFirstChild("Top")
+
+	if not (square and square.Visible) then
+		if RoundStateEnum.Map then
+			RoundStateEnum.Done = true
+		end
+
+		RoundStateEnum.Map = nil
+		RoundStateEnum.MapAt = nil
+		RoundStateEnum.Pad = nil
+		if RoundStateEnum.Done then
+			object:MoveTo(descendant.Position)
+			return
+		end
+
+		if not RoundStateEnum.Waiting then
+			RoundStateEnum.Waiting = true
+			RoundStateEnum.Moves = math.random(1, 3)
+			RoundStateEnum.Move = 0
+			RoundStateEnum.MoveAt = line + 0.4 + math.random()
+		end
+
+		if not RoundStateEnum.Target and RoundStateEnum.Move < RoundStateEnum.Moves and line >= RoundStateEnum.MoveAt then
+			local result33 = radius:FindFirstChild("Part")
+			result33 = result33 and result33.Position - descendant.Position or Vector3.zero
+			local relativePosition = Vector3.new(result33.X, 0, result33.Z)
+
+			if relativePosition.Magnitude > 0.1 then
+				local directionToTarget = relativePosition.Unit
+				local horizontalVelocity = Vector3.new(-directionToTarget.Z, 0, directionToTarget.X)
+				RoundStateEnum.Move = RoundStateEnum.Move + 1
+				local currentPosition = descendant.Position
+				local cell = RoundStateEnum.Move == 1
+
+				if cell then
+					cell = 3 + math.random() * 24
+				end
+
+				local difference = currentPosition + directionToTarget * (cell or math.random() * 1.5)
+				RoundStateEnum.Target = difference + horizontalVelocity * (math.random() - 0.5) * (RoundStateEnum.Move == 1 and 5 or 3)
+			end
+		end
+
+		if not RoundStateEnum.Target then
+			object:MoveTo(descendant.Position)
+			return
+		end
+
+		if (RoundStateEnum.Target - descendant.Position).Magnitude <= 1.5 then
+			RoundStateEnum.Target = nil
+			RoundStateEnum.MoveAt = line + 0.5 + math.random() * 1.5
+			object:MoveTo(descendant.Position)
+		else
+			object:MoveTo(RoundStateEnum.Target)
+		end
+
+		return
+	end
+
+	RoundStateEnum.Done = nil
+	RoundStateEnum.Waiting = nil
+	RoundStateEnum.Moves = nil
+	RoundStateEnum.Move = nil
+	RoundStateEnum.Target = nil
+
+	if RoundStateEnum.Map ~= square or not RoundStateEnum.Pad or not RoundStateEnum.Pad.Parent then
+		RoundStateEnum.Map = square
+		RoundStateEnum.MapAt = line + 0.8 + math.random() * 1.7
+		local gui = radius:FindFirstChild("Colliders")
+		local lines = {}
+		local queue = gui and gui:GetChildren() or {}
+
+		for _, particle in pairs(queue) do
+			if particle:IsA("BasePart") then
+				lines[#lines + 1] = particle
+			end
+		end
+
+		RoundStateEnum.Pad = #lines > 0 and lines[math.random(#lines)]
+	end
+
+	local cell = not RoundStateEnum.Pad
+
+	if not cell then
+		cell = line < (RoundStateEnum.MapAt or 0)
+	end
+
+	if cell then
+		object:MoveTo(descendant.Position)
+		return
+	end
+	local currentPosition = RoundStateEnum.Pad.Position
+	object:MoveTo(Vector3.new(currentPosition.X, descendant.Position.Y, currentPosition.Z))
+end
+
+features.AutoPlay.Stop = function()
+	coroutineFunction("Auto Play")
+	features.AutoPlay.Jump(false)
+	table.clear(features.AutoPlay.Voting)
+	features.AutoPlay.Floor = nil
+	features.AutoPlay.Spawn = nil
+	features.AutoPlay.Map = nil
+	features.AutoPlay.Mode = nil
+	features.AutoPlay.Middle = nil
+	features.AutoPlay.MixAt = nil
+	features.AutoPlay.UpdateAt = nil
+	features.AutoPlay.PressureAt = nil
+	features.AutoPlay.PressureUntil = nil
+	features.AutoPlay.Home = nil
+	features.AutoPlay.Anchor = nil
+	features.AutoPlay.AnchorAt = nil
+	features.AutoPlay.EndAt = nil
+	features.AutoPlay.Raycast = nil
+	features.AutoPlay.LobbyTarget = nil
+	features.AutoPlay.LobbySettling = nil
+	features.AutoPlay.LobbyJumpAt = nil
+	features.AutoPlay.LobbyJumpUntil = nil
+	features.AutoPlay.LobbyDouble = nil
+	features.AutoPlay.LobbyDecided = nil
+	features.AutoPlay.LobbyIdle = nil
+	features.AutoPlay.InMatch = nil
+	features.AutoPlay.MatchHadOpponent = nil
+	features.AutoPlay.WonLast = nil
+	features.AutoPlay.ClashUntil = nil
+	features.AutoPlay.ChaseUntil = nil
+	features.AutoPlay.ClashDistance = nil
+	features.AutoPlay.ClashMoveAt = nil
+	features.AutoPlay.ClashTarget = nil
+	features.AutoPlay.Opponent = nil
+	features.AutoPlay.OpponentUntil = nil
+	features.AutoPlay.LastMove = nil
+	features.AutoPlay.Character = nil
+end
+
+features.AutoPlay.Step = function()
+	smallest = smallest.Parent and smallest or workspace:FindFirstChild("Alive")
+	local model = localPlayer.Character
+	local targetHumanoid = model and model:FindFirstChildOfClass("Humanoid")
+	local explosion = model and model:FindFirstChild("HumanoidRootPart")
+	if not targetHumanoid or not explosion or targetHumanoid.Health <= 0 then
+		features.AutoPlay.Jump(false)
+		return
+	end
+	local osClock = os.clock()
+	if osClock < (features.AutoPlay.UpdateAt or 0) then
+		return
+	end
+	features.AutoPlay.UpdateAt = osClock + 0.066666666666666666
+
+	if flags.AutoVoteMap then
+		features.AutoPlay.VoteMode(osClock)
+	end
+
+	if model.Parent == workspace:FindFirstChild("Dead") then
+		features.AutoPlay.InMatch = false
+		local result49 = workspace:FindFirstChild("Spawn")
+		result49 = result49 and result49:FindFirstChild("NewPlayerCounter")
+		if flags.AutoVoteMap and result49 then
+			features.AutoPlay.VoteMap(osClock, targetHumanoid, explosion, result49)
+			return
+		end
+
+		if not features.AutoPlay.LobbyDecided then
+			features.AutoPlay.LobbyDecided = true
+			features.AutoPlay.LobbyIdle = features.AutoPlay.WonLast and math.random(3) ~= 1 or not features.AutoPlay.WonLast and math.random(5) == 1
+		end
+
+		if features.AutoPlay.LobbyIdle then
+			features.AutoPlay.Jump(false)
+			targetHumanoid:MoveTo(explosion.Position)
+			return
+		end
+
+		result49 = result49 and result49:FindFirstChild("Part")
+		if not result49 then
+			features.AutoPlay.Jump(false)
+			return
+		end
+
+		if features.AutoPlay.Character ~= model or not features.AutoPlay.LobbyTarget then
+			local mouse = workspace:FindFirstChild("LobbySpawnPlate")
+			mouse = mouse and mouse:FindFirstChild("DO_NOT_DELETE")
+			mouse = mouse and mouse.Position - result49.Position or explosion.Position - result49.Position
+			local relativePosition = Vector3.new(mouse.X, 0, mouse.Z)
+			local directionToTarget = relativePosition.Magnitude > 0.001 and relativePosition.Unit or Vector3.zAxis
+			local horizontalVelocity = Vector3.new(-directionToTarget.Z, 0, directionToTarget.X)
+			features.AutoPlay.Character = model
+			features.AutoPlay.LobbySettling = false
+			features.AutoPlay.LobbyJumpAt = osClock + math.random()
+			features.AutoPlay.LobbyJumpUntil = nil
+			local currentLength = result49.Size.X
+			features.AutoPlay.LobbyTarget = result49.Position + directionToTarget * (8 + math.random() * 10) + horizontalVelocity * (math.random() - 0.5) * currentLength * 0.65
+		end
+
+		local halfSize = features.AutoPlay.LobbyTarget
+		local relativePosition = Vector3.new(halfSize.X, explosion.Position.Y, halfSize.Z)
+
+		if (Vector3.new(relativePosition.X, 0, relativePosition.Z) - Vector3.new(explosion.Position.X, 0, explosion.Position.Z)).Magnitude > 2.5 then
+			if (features.AutoPlay.LobbyJumpAt or 0) <= osClock then
+				features.AutoPlay.LobbyJumpAt = osClock + 1.2 + math.random() * 2
+				features.AutoPlay.LobbyJumpUntil = osClock + 0.45
+				features.AutoPlay.LobbyDouble = math.random() < 0.5
+			end
+
+			features.AutoPlay.Jump(osClock < (features.AutoPlay.LobbyJumpUntil or 0), features.AutoPlay.LobbyDouble)
+			targetHumanoid:MoveTo(relativePosition)
+		elseif not features.AutoPlay.LobbySettling then
+			local horizontalVelocity = Vector3.new(explosion.Position.X - result49.Position.X, 0, explosion.Position.Z - result49.Position.Z)
+			local directionToTarget = horizontalVelocity.Magnitude > 0.1 and horizontalVelocity.Unit or Vector3.zAxis
+			local moveVector = Vector3.new(-directionToTarget.Z, 0, directionToTarget.X)
+			features.AutoPlay.LobbySettling = true
+			local dummy = features.AutoPlay
+			local currentPosition = explosion.Position
+			dummy.LobbyTarget = currentPosition + moveVector * (math.random(0, 1) == 0 and -1 or 1) * (3 + math.random() * 4) + directionToTarget * (math.random() - 0.5) * 3
+		else
+			features.AutoPlay.Jump(false)
+			targetHumanoid:MoveTo(explosion.Position)
+		end
+
+		return
+	end
+
+	if not smallest or model.Parent ~= smallest then
+		features.AutoPlay.Jump(false)
+		return
+	end
+
+	if not features.AutoPlay.InMatch then
+		features.AutoPlay.InMatch = true
+		table.clear(features.AutoPlay.Voting)
+		features.AutoPlay.MatchHadOpponent = false
+		features.AutoPlay.WonLast = false
+		features.AutoPlay.LobbyDecided = false
+		features.AutoPlay.LobbyIdle = nil
+		features.AutoPlay.ClashUntil = nil
+		features.AutoPlay.ChaseUntil = nil
+		features.AutoPlay.ClashDistance = nil
+		features.AutoPlay.ClashMoveAt = nil
+		features.AutoPlay.ClashTarget = nil
+		features.AutoPlay.Opponent = nil
+		features.AutoPlay.OpponentUntil = nil
+		features.AutoPlay.LastMove = nil
+		features.AutoPlay.Home = nil
+		features.AutoPlay.Anchor = nil
+		features.AutoPlay.AnchorAt = nil
+		features.AutoPlay.EndAt = nil
+	end
+
+	local radians, angleRadians, track = getAutoPlayOpponent(model, explosion.Position)
+	local player8 = features.AutoPlay.Opponent
+	local checkpointFolder = player8 and player8.Parent
+
+	if checkpointFolder then
+		checkpointFolder = osClock < (features.AutoPlay.OpponentUntil or 0)
+	end
+
+	if checkpointFolder then
+		local exponent = (explosion.Position - player8.Position).Magnitude
+
+		if exponent <= radians + 2.5 then
+			angleRadians = player8
+			radians = exponent
+		end
+	end
+
+	if angleRadians ~= features.AutoPlay.Opponent then
+		features.AutoPlay.Opponent = angleRadians
+		features.AutoPlay.OpponentUntil = osClock + 0.65
+	end
+
+	if track > 1 then
+		features.AutoPlay.MatchHadOpponent = true
+	elseif features.AutoPlay.MatchHadOpponent then
+		features.AutoPlay.WonLast = true
+	end
+
+	if track <= 1 then
+		features.AutoPlay.EndAt = features.AutoPlay.EndAt or osClock + 0.5 + math.random() * 0.7
+
+		if features.AutoPlay.EndAt <= osClock then
+			features.AutoPlay.Jump(false)
+			targetHumanoid:MoveTo(explosion.Position)
+			return
+		end
+	else
+		features.AutoPlay.EndAt = nil
+	end
+
+	features.AutoPlay.Character = model
+	features.AutoPlay.LobbyTarget = nil
+	features.AutoPlay.LobbySettling = nil
+	features.AutoPlay.Jump(flags.SpamJump, true)
+	local result24 = workspace:FindFirstChild("Map")
+
+	if features.AutoPlay.Map ~= result24 or features.AutoPlay.Mode ~= flags.AutoPlayMode or not features.AutoPlay.Floor or not features.AutoPlay.Floor.Parent then
+		features.AutoPlay.Map = result24
+		features.AutoPlay.Mode = flags.AutoPlayMode
+		features.AutoPlay.Floor = result24 and result24:FindFirstChild("FLOOR", true)
+		features.AutoPlay.Spawn = flags.AutoPlayMode ~= "Play Edge" and result24 and result24:FindFirstChild("BALLSPAWN", true)
+		features.AutoPlay.Raycast = nil
+		features.AutoPlay.Home = nil
+		features.AutoPlay.Anchor = nil
+
+		if features.AutoPlay.Floor then
+			local raycastParams = RaycastParams.new()
+			raycastParams.FilterType = Enum.RaycastFilterType.Include
+			raycastParams.FilterDescendantsInstances = { features.AutoPlay.Floor:FindFirstAncestorOfClass("Model") or result24 }
+			raycastParams.RespectCanCollide = true
+			raycastParams.IgnoreWater = true
+			features.AutoPlay.Raycast = raycastParams
+		end
+	end
+
+	local titleLabel = features.AutoPlay.Floor
+	if not titleLabel or not titleLabel:IsA("BasePart") then
+		return
+	end
+	local difference = previous() / 1000
+	local result27 = features.AutoPlay.Middle
+	local IsFiveM = flags.AutoPlayMode == "Play Middle"
+
+	if flags.AutoPlayMode == "Mix" then
+		local cell = features.AutoPlay.Middle == nil
+
+		if not cell then
+			cell = osClock >= (features.AutoPlay.MixAt or 0)
+		end
+
+		if cell then
+			local openError = track <= 2 and 0.8
+
+			if not openError then
+				openError = math.clamp(0.55 - difference * 2 - math.max(track - 24, 0) * 0.04 + ((not angleRadians or radians > 28) and 0.12 or 0), 0.35, 0.75)
+			end
+
+			features.AutoPlay.Middle = math.random() < openError
+			features.AutoPlay.MixAt = osClock + 4 + math.random() * 4
+		end
+
+		IsFiveM = features.AutoPlay.Middle
+	end
+
+	if result27 ~= IsFiveM then
+		features.AutoPlay.Middle = IsFiveM
+		features.AutoPlay.Home = nil
+		features.AutoPlay.Anchor = nil
+	end
+
+	local result49 = features.AutoPlay.Spawn
+	result49 = IsFiveM and result49 and result49:IsA("BasePart") and result49 or titleLabel
+	local relativePosition = Vector3.new(result49.Position.X, explosion.Position.Y, result49.Position.Z)
+	local horizontalVelocity = Vector3.new(explosion.Position.X - relativePosition.X, 0, explosion.Position.Z - relativePosition.Z)
+	local directionToTarget = horizontalVelocity.Magnitude > 1 and horizontalVelocity.Unit or Vector3.xAxis
+	local openError = IsFiveM and math.max(result49.Size.X, result49.Size.Z) or 0
+	local step = math.min(titleLabel.Size.X, titleLabel.Size.Z) * (IsFiveM and 0.13 or 0.31)
+	local mathMax = IsFiveM and math.max(openError * 0.75, targetHumanoid.WalkSpeed * 0.45) or 0
+	local t = features.AutoPlay.Direction
+	local leftChild = Vector3.new(-directionToTarget.Z, 0, directionToTarget.X) * t
+	local endPosition = relativePosition + directionToTarget * step
+	local maximumValue = math.clamp((flags.AutoPlayAggressiveness or nil) / 100, 0.01, 1)
+	local offsetZ = (18 + targetHumanoid.WalkSpeed * difference * (8 + math.min(math.max(track - 2, 0), 4))) * (1 + (0.45 - maximumValue) * (maximumValue > 0.45 and 1.18 or 0.5))
+	local cell = angleRadians and radians < offsetZ
+
+	if not features.AutoPlay.Home then
+		local dummy = features.AutoPlay
+		local newDenominator = targetHumanoid.WalkSpeed * 0.5
+		dummy.Home = math.abs(horizontalVelocity.Magnitude - step) > newDenominator and endPosition or explosion.Position
+		features.AutoPlay.Anchor = features.AutoPlay.Home
+		features.AutoPlay.AnchorAt = osClock
+	end
+
+	local moveVector
+
+	if cell then
+		local newDenominator = explosion.Position - angleRadians.Position
+		local newDirection = Vector3.new(newDenominator.X, 0, newDenominator.Z)
+		moveVector = nil
+
+		if newDirection.Magnitude > 0.1 then
+			local deltaZ = features.AutoPlay.Direction
+			local directionVector = (newDirection.Unit + Vector3.new(-newDirection.Unit.Z, 0, newDirection.Unit.X) * deltaZ * 0.55).Unit
+			local center = math.min(offsetZ - radians + targetHumanoid.WalkSpeed * 0.25, targetHumanoid.WalkSpeed)
+			local screenPosition = explosion.Position + directionVector * center
+			local edgeVector = Vector3.new(screenPosition.X - relativePosition.X, 0, screenPosition.Z - relativePosition.Z)
+			local clampedX = step + targetHumanoid.WalkSpeed * 0.45
+
+			if clampedX < edgeVector.Magnitude then
+				local max = edgeVector.Unit * clampedX
+				screenPosition = Vector3.new(relativePosition.X, explosion.Position.Y, relativePosition.Z) + max
+			elseif IsFiveM and edgeVector.Magnitude < mathMax then
+				screenPosition = relativePosition + (edgeVector.Magnitude > 0.001 and edgeVector.Unit or directionToTarget) * mathMax
+			end
+
+			local max = screenPosition - explosion.Position
+			moveVector = Vector3.new(max.X, 0, max.Z)
+
+			if moveVector.Magnitude < 1 then
+				moveVector = (leftChild - directionToTarget * 0.4).Unit * center
+				screenPosition = explosion.Position + moveVector
+			end
+
+			features.AutoPlay.Home = screenPosition
+			features.AutoPlay.Anchor = features.AutoPlay.Home
+		end
+	else
+		local direction = features.AutoPlay.Anchor or explosion.Position
+		local active = (Vector3.new(direction.X, 0, direction.Z) - Vector3.new(explosion.Position.X, 0, explosion.Position.Z)).Magnitude < 1.5
+
+		if not active then
+			active = osClock >= (features.AutoPlay.AnchorAt or 0)
+		end
+
+		moveVector = nil
+
+		if active then
+			if math.random() < 0.4 then
+				features.AutoPlay.Direction = -features.AutoPlay.Direction
+				leftChild = -leftChild
+			end
+
+			features.AutoPlay.AnchorAt = osClock + 0.6 + math.random() * 0.8
+			local originalWalkSpeed = targetHumanoid.WalkSpeed
+			features.AutoPlay.Anchor = features.AutoPlay.Home + leftChild * targetHumanoid.WalkSpeed * (0.2 + math.random() * 0.25) + directionToTarget * (math.random() - 0.5) * originalWalkSpeed * 0.25
+			moveVector = nil
+		end
+	end
+
+	local newDenominator = (features.AutoPlay.Anchor or features.AutoPlay.Home) - explosion.Position
+	local newDirection = Vector3.new(newDenominator.X, 0, newDenominator.Z)
+	local directionVector = newDirection.Magnitude > 2 and newDirection.Unit or Vector3.zero
+	local active = osClock >= (sapphireBBState.ParryActiveUntil or 0)
+
+	if active then
+		active = osClock < (sapphireBBState.ParryCooldownUntil or 0)
+	end
+
+	local aimDirection = nil
+	local axis = nil
+
+	if not continuation(model) then
+		aimDirection = nil
+		axis = nil
+
+		for _, modelName in features.Ball.GetAllBalls() do
+			local steering = index7(modelName)
+			local exponent = index4(modelName).Magnitude
+			local targetPlayerName = localPlayer.Name
+			local isArray = compareFunction(modelName) == targetPlayerName
+			local isFiveM = flags.HitFreeze and isArray
+
+			if isFiveM then
+				isFiveM = modelName:GetAttribute("Frozen") == true
+			end
+
+			if isArray and active then
+				local center = explosion.Position - unexecuteFunction(modelName)
+				local edgeVector = Vector3.new(center.X, 0, center.Z)
+
+				if edgeVector.Magnitude > 0.1 then
+					aimDirection = edgeVector.Unit
+					axis = nil
+					break
+				else
+					aimDirection = nil
+					axis = nil
+				end
+			else
+				if isArray then
+					isArray = (steering.TargetChanges or 0) <= 1 and exponent <= targetHumanoid.WalkSpeed or isFiveM
+				end
+
+				if isArray then
+					local currentPosition = explosion.Position
+					local center = unexecuteFunction(modelName) - currentPosition
+					local edgeVector = Vector3.new(center.X, 0, center.Z)
+
+					if not (edgeVector.Magnitude > 0.1) then
+						aimDirection = nil
+						axis = nil
+					else
+						axis = edgeVector.Unit
+						aimDirection = nil
+						break
+					end
+				else
+					aimDirection = nil
+					axis = nil
+				end
+			end
+		end
+	end
+
+	if angleRadians and not aimDirection then
+		local center = math.clamp((offsetZ - radians) / offsetZ, 0, 1)
+
+		if center > 0 and moveVector and moveVector.Magnitude > 0.001 then
+			directionVector = directionVector:Lerp(moveVector.Unit, center)
+		end
+
+		local clampedX = math.clamp(math.clamp(1 - difference / 0.001, 0, 1) * (0.6 + maximumValue * 0.4) + maximumValue * 0.25 + math.max(maximumValue - 0.45, 0) * 0.5, 0, 1)
+
+		if (features.AutoPlay.PressureAt or 0) <= osClock then
+			local max = math.clamp(maximumValue / 0.45, 0.65, 2)
+			local endIndex = math.min
+			local tMinimum = track == 2 and 0.3 + clampedX * 0.35 or clampedX * 0.45
+			local vertexCount = 1
+			local steering = endIndex(tMinimum * math.clamp(max, 0.55, 1.8), vertexCount)
+			features.AutoPlay.PressureAt = osClock + ((track == 2 and 2.5 or 3) + math.random() * 3) / max
+			features.AutoPlay.PressureUntil = math.random() < steering and osClock + (0.65 + math.random() * 0.55) * math.clamp(max, 0.75, 1.5) or 0
+		end
+
+		local isArray = center == 0
+
+		if isArray then
+			isArray = osClock < (features.AutoPlay.PressureUntil or 0)
+		end
+
+		if isArray and radians < offsetZ * (2 + maximumValue) then
+			local max = angleRadians.Position - explosion.Position
+			directionVector = directionVector:Lerp(Vector3.new(max.X, 0, max.Z).Unit, 0.35 + clampedX * 0.2)
+		end
+
+		if track == 2 then
+			local parts = flags.AutoSpamEnabled
+
+			if parts then
+				parts = osClock - (sapphireBBState.AutoSpamAt or 0) < 0.2
+			end
+
+			if not parts then
+				parts = flags.ManualSpamEnabled
+
+				if parts then
+					parts = osClock - (sapphireBBState.ManualSpamAt or 0) < 0.2
+				end
+			end
+
+			if parts then
+				local bestLabel = osClock >= (features.AutoPlay.ClashUntil or 0)
+				features.AutoPlay.ClashUntil = osClock + 0.4
+
+				if not bestLabel and features.AutoPlay.ClashDistance and radians > features.AutoPlay.ClashDistance + 0.3 then
+					features.AutoPlay.ChaseUntil = osClock + 0.9
+				end
+
+				if bestLabel then
+					features.AutoPlay.ClashMoveAt = nil
+					features.AutoPlay.ClashTarget = nil
+				end
+
+				features.AutoPlay.ClashDistance = radians
+			end
+
+			if osClock < (features.AutoPlay.ClashUntil or 0) then
+				local max = angleRadians.Position - explosion.Position
+				local edgeVector = Vector3.new(max.X, 0, max.Z)
+				local bestLabel = edgeVector.Magnitude > 0.1
+
+				if bestLabel then
+					bestLabel = radians > 9
+
+					if not bestLabel then
+						bestLabel = osClock < (features.AutoPlay.ChaseUntil or 0)
+					end
+				end
+
+				if bestLabel then
+					local currentPosition = angleRadians.Position
+					IsFiveM = IsFiveM and horizontalVelocity.Magnitude < mathMax + 12 and edgeVector.Unit:Dot(directionToTarget) < 0
+
+					if IsFiveM then
+						currentPosition = explosion.Position + (leftChild + directionToTarget * 0.25).Unit * 14
+					end
+
+					targetHumanoid:MoveTo(currentPosition)
+				else
+					if (features.AutoPlay.ClashMoveAt or 0) <= osClock then
+						features.AutoPlay.ClashMoveAt = osClock + 0.35 + math.random() * 0.5
+						features.AutoPlay.ClashTarget = explosion.Position + (edgeVector.Magnitude > 0.1 and Vector3.new(-edgeVector.Z, 0, edgeVector.X).Unit or Vector3.zero) * (math.random(3) == 1 and math.random(-2, 2) or 0)
+					end
+
+					targetHumanoid:MoveTo(features.AutoPlay.ClashTarget or explosion.Position)
+				end
+
+				return
+			end
+		end
+	end
+
+	if aimDirection then
+		directionVector = aimDirection
+	elseif axis then
+		directionVector = (axis * 0.9 + leftChild * 0.1).Unit
+	end
+
+	if directionVector.Magnitude > 0.1 then
+		local surfaceNormal = directionVector.Unit
+
+		if IsFiveM and horizontalVelocity.Magnitude < mathMax + 12 and surfaceNormal:Dot(directionToTarget) < 0 then
+			surfaceNormal = (leftChild + directionToTarget * 0.25).Unit
+		end
+
+		local raycastResult = features.AutoPlay.Raycast and workspace:Raycast(explosion.Position, surfaceNormal * 12, features.AutoPlay.Raycast)
+
+		if raycastResult then
+			local edgeVector = Vector3.new(raycastResult.Normal.X, 0, raycastResult.Normal.Z)
+
+			if 0.001 < edgeVector.Magnitude then
+				local finalDirection = edgeVector.Unit
+				local range = Vector3.new(-finalDirection.Z, 0, finalDirection.X)
+
+				if range:Dot(surfaceNormal) < 0 then
+					range = -range
+				end
+
+				surfaceNormal = (range + finalDirection * 0.35).Unit
+			end
+		end
+
+		if not axis and not aimDirection and features.AutoPlay.LastMove and features.AutoPlay.LastMove:Dot(surfaceNormal) > -0.6 then
+			local deepCopyTable = math.clamp
+			local currentQuantity = flags.AutoPlaySmoothness or 50
+			local vertexCount = 1
+			local center = 0.82 - (deepCopyTable(currentQuantity, 1, 100) - vertexCount) / 99 * 0.48
+
+			if cell then
+				center = math.min(center + 0.18, 0.9)
+			end
+
+			local steering = features.AutoPlay.LastMove:Lerp(surfaceNormal, center)
+
+			if 0.001 < steering.Magnitude then
+				surfaceNormal = steering.Unit
+			end
+		end
+
+		features.AutoPlay.LastMove = surfaceNormal
+		targetHumanoid:MoveTo(explosion.Position + surfaceNormal * 12)
+	else
+		features.AutoPlay.LastMove = nil
+		targetHumanoid:MoveTo(explosion.Position)
+	end
+end
+
+    features.AutoPlay.Toggle = function(enabled)
+        flags.AutoPlayEnabled = enabled == true
+        features.AutoPlay.Stop()
+        if enabled then
+            sapphireBBState.Connections["Auto Play"] = runService.PreSimulation:Connect(features.AutoPlay.Step)
+        end
+    end
+
+    F.AutoPlay, F.AFK = features.AutoPlay, features.AFK
+    F.Rewards, F.Stats, F.Streak = features.Rewards, features.Stats, features.Streak
+
     function F.SetTriggerOption(key, value)
         if F.Destroyed then return end
         local config = u1070.triggerbot
@@ -18816,7 +20627,13 @@ do
             end
             if not sent then return false end
         end
-        if sent and M.Active(owner, session) then M.RecordSend() end
+        if sent and M.Active(owner, session) then
+            if u1070.sapphire and u1070.sapphire.State then
+                local state = u1070.sapphire.State
+                if owner == "Auto" then state.AutoSpamAt = os.clock() else state.ManualSpamAt = os.clock() end
+            end
+            M.RecordSend()
+        end
         return sent
     end
 
@@ -19042,12 +20859,24 @@ do
             if mode == "Keypress" then
                 M.ReleaseCapture()
                 sent = u1070.parry.execute_fast("Keypress") ~= false
-                if sent and M.Active(owner, session) then M.RecordSend() end
+                if sent and M.Active(owner, session) then
+            if u1070.sapphire and u1070.sapphire.State then
+                local state = u1070.sapphire.State
+                if owner == "Auto" then state.AutoSpamAt = os.clock() else state.ManualSpamAt = os.clock() end
+            end
+            M.RecordSend()
+        end
             else
                 sent = M.FireRemote(owner, context)
                 if not sent and M.Active(owner, session) then
                     sent = u1070.parry.execute_fast("Keypress") ~= false
-                    if sent and M.Active(owner, session) then M.RecordSend() end
+                    if sent and M.Active(owner, session) then
+            if u1070.sapphire and u1070.sapphire.State then
+                local state = u1070.sapphire.State
+                if owner == "Auto" then state.AutoSpamAt = os.clock() else state.ManualSpamAt = os.clock() end
+            end
+            M.RecordSend()
+        end
                 end
             end
             if sent and M.Active(owner, session) and M.VisualAllowed() then V.Pulse() end
@@ -20359,6 +22188,115 @@ end
 
 end
 
+do
+    local tab, saved = __S[12], u864._config._flags
+    local autoSaved = saved.sapphire_misc_auto_play
+    local autoBuilding = true
+    local autoPlay = tab:create_module({
+        title = "Auto Play", description = "moves and plays automatically using Flyte's modes",
+        section = "left", flag = "sapphire_misc_auto_play", notify = true,
+        callback = function(enabled)
+            if autoBuilding and autoSaved == false then enabled = false end
+            u1070.sapphire.Flags.AutoPlayEnabled = enabled == true
+            u1070.sapphire.AutoPlay.Toggle(enabled == true)
+        end
+    })
+    if autoSaved == false then autoPlay:change_state(false) end
+    autoBuilding = false
+    autoPlay:create_checkbox({
+        title = "Auto Vote Map", flag = "sapphire_misc_auto_vote_map",
+        callback = function(value)
+            u1070.sapphire.Flags.AutoVoteMap = value == true
+            if not value then table.clear(u1070.sapphire.AutoPlay.Voting) end
+        end
+    })
+    autoPlay:create_checkbox({
+        title = "Hit Freeze", flag = "sapphire_misc_hit_freeze",
+        callback = function(value) u1070.sapphire.Flags.HitFreeze = value == true end
+    })
+    autoPlay:create_checkbox({
+        title = "Spam Jump", flag = "sapphire_misc_spam_jump",
+        callback = function(value)
+            u1070.sapphire.Flags.SpamJump = value == true
+            if not value then u1070.sapphire.AutoPlay.Jump(false) end
+        end
+    })
+    autoPlay:create_slider({
+        title = "Smoothness", flag = "sapphire_misc_auto_play_smoothness", value = 50,
+        minimum_value = 1, maximum_value = 100, decimals = 0,
+        callback = function(value) u1070.sapphire.Flags.AutoPlaySmoothness = value end
+    })
+    autoPlay:create_slider({
+        title = "Aggressiveness", flag = "sapphire_misc_auto_play_aggressiveness", value = 45,
+        minimum_value = 1, maximum_value = 100, decimals = 0,
+        callback = function(value) u1070.sapphire.Flags.AutoPlayAggressiveness = value end
+    })
+    autoPlay:create_checkbox({
+        title = "Anti-AFK", flag = "sapphire_misc_anti_afk",
+        callback = function(value)
+            u1070.sapphire.Flags.AntiAFK = value == true
+            if u1070.sapphire.AFK then u1070.sapphire.AFK.Toggle(value == true) end
+        end
+    })
+    autoPlay:create_dropdown({
+        title = "Mode", flag = "sapphire_misc_auto_play_mode",
+        options = {"Play Edge", "Play Middle", "Mix"}, maximum_options = 3,
+        multi_dropdown = false,
+        callback = function(value) u1070.sapphire.Flags.AutoPlayMode = value end
+    })
+
+    local rewardInitial = saved.sapphire_misc_rewards
+    local rewardBuilding = true
+    local rewards = tab:create_module({
+        title = "Rewards", description = "automatically claims available rewards",
+        section = "right", flag = "sapphire_misc_rewards", notify = true,
+        callback = function(enabled)
+            if rewardBuilding and rewardInitial == false then enabled = false end
+            for _, item in ipairs(u1070.sapphire.Rewards and u1070.sapphire.Rewards.Items or {}) do
+                u1070.sapphire.Flags[item.ID] = enabled == true
+            end
+            if u1070.sapphire.Rewards then u1070.sapphire.Rewards.Toggle() end
+        end
+    })
+    if rewardInitial == false then rewards:change_state(false) end
+    rewardBuilding = false
+    for _, item in ipairs(u1070.sapphire.Rewards and u1070.sapphire.Rewards.Items or {}) do
+        rewards:create_checkbox({
+            title = item.Name, flag = "sapphire_misc_" .. string.lower(item.ID), notify = item.Notify == true,
+            callback = function(enabled)
+                u1070.sapphire.Flags[item.ID] = enabled == true
+                if u1070.sapphire.Rewards then u1070.sapphire.Rewards.Toggle() end
+            end
+        })
+    end
+
+    local statsInitial = saved.sapphire_misc_stats
+    local statsBuilding = true
+    local stats = tab:create_module({
+        title = "Stats", description = "shows Wins, Elims and RAP in player stats and profile cards",
+        section = "right", flag = "sapphire_misc_stats", notify = true,
+        callback = function(enabled)
+            if statsBuilding and statsInitial == false then enabled = false end
+            u1070.sapphire.Flags.ShowWins = enabled == true
+            u1070.sapphire.Flags.ShowElims = enabled == true
+            u1070.sapphire.Flags.ShowRAP = enabled == true
+            if u1070.sapphire.Stats then u1070.sapphire.Stats.Queue() end
+        end
+    })
+    if statsInitial == false then stats:change_state(false) end
+    statsBuilding = false
+    for _, entry in ipairs({{"Wins", "Show Wins"}, {"Elims", "Show Elims"}, {"RAP", "Show RAP"}}) do
+        local key, label = entry[1], entry[2]
+        stats:create_checkbox({
+            title = label, flag = "sapphire_misc_show_" .. string.lower(key),
+            callback = function(enabled)
+                u1070.sapphire.Flags["Show" .. key] = enabled == true
+                if u1070.sapphire.Stats then u1070.sapphire.Stats.Queue() end
+            end
+        })
+    end
+end
+
 __S[13] = __S[5]:create_module({
     title = "Auto Parry",
     description = "automatic ball deflection",
@@ -20446,6 +22384,15 @@ __S[13]:create_dropdown({
     end
 })
 
+__S[13]:create_dropdown({
+    title = "Parry Loop",
+    flag = "parry_loop",
+    options = {"PreSimulation", "PreRender"},
+    maximum_options = 2,
+    multi_dropdown = false,
+    callback = function(value) u1070.sapphire.SetAutoLoop(value) end
+})
+
 __S[13]:create_divider({showtopic = true, title = "Pre Click"})
 
 __S[13]:create_checkbox({
@@ -20528,10 +22475,10 @@ __S[13]:create_checkbox({
 __S[13]:create_divider({showtopic = true, title = "Curve"})
 
 __S[13]:create_dropdown({
-    title = "Curve Method",
+    title = "Curve Type",
     flag = "curve_method",
     options = u1073,
-    maximum_options = 5,
+    maximum_options = 9,
     multi_dropdown = false,
     keybind = true,
     notify = true,
