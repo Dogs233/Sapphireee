@@ -335,20 +335,23 @@ local u861 = {
         Success = "Success"
     },
     Colors = {
-        Background = u820.fromRGB(8, 7, 12),
-        Card = u820.fromRGB(14, 13, 18),
-        CardDeep = u820.fromRGB(21, 20, 25),
-        Stroke = u820.fromRGB(42, 42, 46),
-        StrokeHot = u820.fromRGB(98, 98, 103),
-        Accent = u820.fromRGB(235, 234, 239),
-        AccentDim = u820.fromRGB(125, 124, 130),
-        AccentSoft = u820.fromRGB(185, 184, 190),
-        AccentGlow = u820.fromRGB(235, 234, 239),
-        Text = u820.fromRGB(235, 234, 239),
-        SubText = u820.fromRGB(100, 99, 105),
-        NotifyBg = u820.fromRGB(14, 13, 18),
-        Danger = u820.fromRGB(240, 70, 70),
-        Success = u820.fromRGB(72, 210, 140)
+        Background = u820.fromRGB(18, 10, 8),
+        Card = u820.fromRGB(31, 18, 13),
+        CardDeep = u820.fromRGB(44, 25, 18),
+        Stroke = u820.fromRGB(76, 42, 29),
+        StrokeHot = u820.fromRGB(126, 62, 34),
+        Accent = u820.fromRGB(201, 60, 32),
+        AccentDim = u820.fromRGB(92, 32, 14),
+        AccentSoft = u820.fromRGB(233, 141, 84),
+        AccentGlow = u820.fromRGB(226, 88, 34),
+        Text = u820.fromRGB(243, 230, 213),
+        SubText = u820.fromRGB(151, 116, 96),
+        NotifyBg = u820.fromRGB(31, 18, 13),
+        Danger = u820.fromRGB(158, 26, 26),
+        Success = u820.fromRGB(122, 154, 88),
+        Bone = u820.fromRGB(238, 224, 202),
+        Pumpkin = u820.fromRGB(234, 124, 32),
+        Blood = u820.fromRGB(122, 16, 16)
     },
     DefaultColors = {},
     Connections = u816({}, {
@@ -670,7 +673,7 @@ function u864.SendNotification(r0)
     u874.Parent = u873
     local u875 = r6.new("Frame")
     u875.Size = u821.new(1, 0, 1, 0)
-    u875.BackgroundColor3 = u820.fromRGB(14, 13, 18)
+    u875.BackgroundColor3 = u861.Colors.NotifyBg
     u875.BackgroundTransparency = 0
     u875.BorderSizePixel = 0
     u875.ClipsDescendants = true
@@ -714,7 +717,7 @@ function u864.SendNotification(r0)
     r3_4.Size = u821.new(0, 14, 0, 14)
     r3_4.Position = u821.new(0.5, 0, 0.5, 0)
     r3_4.AnchorPoint = Vector2.new(0.5, 0.5)
-    r3_4.Image = u866(r0.icon)
+    r3_4.Image = u866(r0.icon or "skull")
     r3_4.ImageColor3 = r8
     r3_4.Parent = r2_4
     local r2_5 = r6.new("TextLabel")
@@ -858,6 +861,32 @@ function u864.create_ui(u876)
         end
     end)()
 
+    do
+        local __halloween = {
+            Background = u820.fromRGB(18, 10, 8),
+            Card = u820.fromRGB(31, 18, 13),
+            CardDeep = u820.fromRGB(44, 25, 18),
+            Stroke = u820.fromRGB(76, 42, 29),
+            StrokeHot = u820.fromRGB(126, 62, 34),
+            Accent = u820.fromRGB(201, 60, 32),
+            AccentDim = u820.fromRGB(92, 32, 14),
+            AccentSoft = u820.fromRGB(233, 141, 84),
+            AccentGlow = u820.fromRGB(226, 88, 34),
+            Text = u820.fromRGB(243, 230, 213),
+            SubText = u820.fromRGB(151, 116, 96),
+            NotifyBg = u820.fromRGB(31, 18, 13),
+            Danger = u820.fromRGB(158, 26, 26),
+            Success = u820.fromRGB(122, 154, 88),
+            Bone = u820.fromRGB(238, 224, 202),
+            Pumpkin = u820.fromRGB(234, 124, 32),
+            Blood = u820.fromRGB(122, 16, 16)
+        }
+
+        for __key, __value in pairs(__halloween) do
+            u861.Colors[__key] = __value
+        end
+    end
+
     local u877 = u861.Colors
     local u878 = u857()
     local u879 = r4.new("Frame")
@@ -874,6 +903,15 @@ function u864.create_ui(u876)
     local r2 = r4.new("UICorner")
     r2.CornerRadius = u822.new(0, 18)
     r2.Parent = u879
+    local __containerGrad = r4.new("UIGradient")
+    __containerGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, u820.fromRGB(40, 21, 14)),
+        ColorSequenceKeypoint.new(0.42, u820.fromRGB(22, 12, 9)),
+        ColorSequenceKeypoint.new(0.78, u820.fromRGB(30, 12, 10)),
+        ColorSequenceKeypoint.new(1, u820.fromRGB(20, 8, 8))
+    })
+    __containerGrad.Rotation = 118
+    __containerGrad.Parent = u879
     local r2_2 = r4.new("UIStroke")
     r2_2.Color = u877.StrokeHot
     r2_2.Transparency = 0.6
@@ -1043,6 +1081,38 @@ function u864.create_ui(u876)
 
     r56.Offset = Vector2.new(0, 0)
     r56.Parent = r47
+    local __skullBadge = r4.new("ImageLabel")
+    __skullBadge.Name = "SkullBadge"
+    __skullBadge.BackgroundTransparency = 1
+    __skullBadge.AnchorPoint = Vector2.new(0, 0.5)
+    __skullBadge.Position = u821.new(0.055, 106, 0.055, 0)
+    __skullBadge.Size = u821.new(0, 13, 0, 13)
+    __skullBadge.Image = u866("skull")
+    __skullBadge.ImageColor3 = u861.Colors.Bone
+    __skullBadge.ImageTransparency = 0.08
+    __skullBadge.ZIndex = 2
+    __skullBadge.Parent = u880
+    local __halloweenTag = r4.new("TextLabel")
+    __halloweenTag.Name = "HalloweenTag"
+    __halloweenTag.BackgroundTransparency = 1
+    __halloweenTag.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.Bold)
+    __halloweenTag.Text = "HALLOWEEN"
+    __halloweenTag.TextSize = 8
+    __halloweenTag.TextColor3 = u861.Colors.Pumpkin
+    __halloweenTag.TextTransparency = 0.18
+    __halloweenTag.TextXAlignment = u824.TextXAlignment.Left
+    __halloweenTag.AnchorPoint = Vector2.new(0, 0.5)
+    __halloweenTag.Position = u821.new(0.055, 124, 0.055, 0)
+    __halloweenTag.Size = u821.new(0, 66, 0, 10)
+    __halloweenTag.ZIndex = 2
+    local __halloweenGrad = r4.new("UIGradient")
+    __halloweenGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, u861.Colors.Pumpkin),
+        ColorSequenceKeypoint.new(1, u861.Colors.Accent)
+    })
+    __halloweenGrad.Rotation = 90
+    __halloweenGrad.Parent = __halloweenTag
+    __halloweenTag.Parent = u880
     local r65 = r4.new("Frame")
     r65.Name = "Pin"
     r65.Position = u821.new(0.026, 0, 0.136, 0)
@@ -1057,7 +1127,7 @@ function u864.create_ui(u876)
     local u885 = r4.new("ImageLabel")
     u885.ScaleType = u824.ScaleType.Fit
     u885.AnchorPoint = Vector2.new(0, 0.5)
-    u885.Image = "rbxassetid://10723396000"
+    u885.Image = ""
     u885.BackgroundTransparency = 1
     u885.Position = u821.new(0.025, 0, 0.055, 0)
     u885.Name = "Icon"
@@ -1066,6 +1136,55 @@ function u864.create_ui(u876)
     u885.ImageColor3 = u877.AccentSoft
     u885.Parent = u880
     u885.ImageRectSize = Vector2.new(0, 0)
+
+    local __fsParts = {}
+    local __fsColor = u861.Colors.AccentSoft
+    local __fsThick = 1.5
+    local __fsRadius = 0.75
+    local __fsBars = {
+        {2.25, 2.25, 3.0, 1.5},
+        {2.25, 2.25, 1.5, 3.0},
+        {12.75, 2.25, 3.0, 1.5},
+        {14.25, 2.25, 1.5, 3.0},
+        {12.75, 14.25, 3.0, 1.5},
+        {14.25, 12.75, 1.5, 3.0},
+        {2.25, 14.25, 3.0, 1.5},
+        {2.25, 12.75, 1.5, 3.0}
+    }
+
+    for __index = 1, #__fsBars do
+        local __spec = __fsBars[__index]
+        local __bar = r4.new("Frame")
+        __bar.AnchorPoint = Vector2.new(0, 0)
+        __bar.Position = u821.new(0, __spec[1], 0, __spec[2])
+        __bar.Size = u821.new(0, __spec[3], 0, __spec[4])
+        __bar.BackgroundColor3 = __fsColor
+        __bar.BorderSizePixel = 0
+        __bar.Parent = u885
+        local __barCorner = r4.new("UICorner")
+        __barCorner.CornerRadius = u822.new(0, __fsRadius)
+        __barCorner.Parent = __bar
+        __fsParts[#__fsParts + 1] = __bar
+    end
+
+    local __fsBox = r4.new("Frame")
+    __fsBox.AnchorPoint = Vector2.new(0, 0)
+    __fsBox.Position = u821.new(0, 5.25, 0, 6.0)
+    __fsBox.Size = u821.new(0, 7.5, 0, 6.0)
+    __fsBox.BackgroundTransparency = 1
+    __fsBox.BorderSizePixel = 0
+    __fsBox.Parent = u885
+    local __fsBoxCorner = r4.new("UICorner")
+    __fsBoxCorner.CornerRadius = u822.new(0, __fsRadius)
+    __fsBoxCorner.Parent = __fsBox
+    local __fsStroke = r4.new("UIStroke")
+    __fsStroke.Color = __fsColor
+    __fsStroke.Thickness = __fsThick
+    __fsStroke.ApplyStrokeMode = u824.ApplyStrokeMode.Border
+    __fsStroke.Parent = __fsBox
+    u876._theme_fullscreen = __fsParts
+    u876._theme_fullscreen_stroke = __fsStroke
+    u876._theme_fullscreen_box = __fsBox
 
     task.spawn(function()
     end)
@@ -1166,16 +1285,15 @@ function u864.create_ui(u876)
             return image
         end
         local aura = overlay("GemAura", 21, 0.9)
-        u885.Parent = jewel
-        u885.AnchorPoint = Vector2.new(0.5, 0.5)
-        u885.Position = u821.new(0.5, 0, 0.5, 0)
-        u885.Size = u821.fromOffset(16, 16)
+        badge.BackgroundTransparency = 1
+        border.Transparency = 1
+        jewel.Visible = false
         u885.ZIndex = badge.ZIndex + 1
         local facet = r4.new("UIGradient")
         facet.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, u820.fromRGB(255, 255, 255)),
-            ColorSequenceKeypoint.new(0.5, u820.fromRGB(173, 185, 255)),
-            ColorSequenceKeypoint.new(1, u820.fromRGB(242, 246, 255))
+            ColorSequenceKeypoint.new(0, u820.fromRGB(255, 236, 214)),
+            ColorSequenceKeypoint.new(0.5, u820.fromRGB(255, 150, 80)),
+            ColorSequenceKeypoint.new(1, u820.fromRGB(255, 240, 226))
         })
         facet.Rotation = 35
         facet.Parent = u885
@@ -1183,7 +1301,7 @@ function u864.create_ui(u876)
         hoverLight.ZIndex = badge.ZIndex + 2
         local glint = overlay("GemGlint", 16, 0.12)
         glint.ZIndex = badge.ZIndex + 3
-        glint.ImageColor3 = u820.fromRGB(244, 249, 255)
+        glint.ImageColor3 = u820.fromRGB(255, 232, 205)
         local shine = r4.new("UIGradient")
         shine.Rotation = 25
         shine.Offset = Vector2.new(-1.15, 0)
@@ -1630,8 +1748,8 @@ function u864.create_ui(u876)
 
         r6_3.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, u877.Text),
-            ColorSequenceKeypoint.new(0.65, u820.fromRGB(148, 147, 153)),
-            ColorSequenceKeypoint.new(1, u820.fromRGB(75, 74, 80))
+            ColorSequenceKeypoint.new(0.65, u820.fromRGB(170, 140, 120)),
+            ColorSequenceKeypoint.new(1, u820.fromRGB(70, 40, 30))
         })
 
         r6_3.Parent = r5_4
@@ -1877,7 +1995,7 @@ function u864.create_ui(u876)
             u909.Position = u821.new(0.82, 0, 0.757, 0)
             u909.Size = u821.new(0, 26, 0, 13)
             u909.BorderSizePixel = 0
-            u909.BackgroundColor3 = u820.fromRGB(8, 7, 12)
+            u909.BackgroundColor3 = u861.Colors.Background
             u909.Parent = r16
             local r4_9 = u859.new("UICorner")
             r4_9.CornerRadius = u822.new(0, 12)
@@ -2036,7 +2154,7 @@ function u864.create_ui(u876)
                     u832:Create(u904, TweenInfo.new(0.5, u824.EasingStyle.Quint, u824.EasingDirection.Out), {Size = u821.new(1, -8, 0, 93)}):Play()
 
                     u832:Create(u909, TweenInfo.new(0.45, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
-                        BackgroundColor3 = u820.fromRGB(8, 7, 12),
+                        BackgroundColor3 = u861.Colors.Background,
                         BackgroundTransparency = 0.6
                     }):Play()
 
@@ -2245,7 +2363,7 @@ function u864.create_ui(u876)
                 r3.Parent = r2_5
                 local u926 = u859.new("TextLabel")
                 u926.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.SemiBold)
-                u926.TextColor3 = u820.fromRGB(235, 234, 239)
+                u926.TextColor3 = u861.Colors.Text
                 u926.TextTransparency = 0.2
                 u926.Text = "0"
                 u926.Name = "Value"
@@ -3505,9 +3623,20 @@ function u864.create_ui(u876)
                 r2.LayoutOrder = u900
 
                 if r1 and r1.showtopic then
+                    local __dividerSkull = u859.new("ImageLabel")
+                    __dividerSkull.Name = "DividerSkull"
+                    __dividerSkull.BackgroundTransparency = 1
+                    __dividerSkull.AnchorPoint = Vector2.new(0.5, 0.5)
+                    __dividerSkull.Position = u821.new(0.5, -86, 0.5, 0)
+                    __dividerSkull.Size = u821.new(0, 10, 0, 10)
+                    __dividerSkull.Image = u866("skull")
+                    __dividerSkull.ImageColor3 = u861.Colors.Accent
+                    __dividerSkull.ImageTransparency = 0.2
+                    __dividerSkull.ZIndex = 3
+                    __dividerSkull.Parent = r2
                     local r3 = u859.new("TextLabel")
                     r3.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.SemiBold)
-                    r3.TextColor3 = u820.fromRGB(235, 234, 239)
+                    r3.TextColor3 = u861.Colors.Text
                     r3.TextTransparency = 0.2
                     r3.Text = r1.title
                     r3.Size = u821.new(0, 153, 0, 13)
@@ -3532,7 +3661,7 @@ function u864.create_ui(u876)
                 if r1 then
                     local r3_3 = u859.new("Frame")
                     r3_3.Size = u821.new(1, 0, 0, 1)
-                    r3_3.BackgroundColor3 = u820.fromRGB(235, 234, 239)
+                    r3_3.BackgroundColor3 = u861.Colors.StrokeHot
                     r3_3.BorderSizePixel = 0
                     r3_3.ZIndex = 2
                     r3_3.BackgroundTransparency = 0.55
@@ -3585,7 +3714,7 @@ function u864.create_ui(u876)
                 u982.Size = u821.new(0, 207, 0, 20)
                 u982.BorderSizePixel = 0
                 u982.TextSize = 11
-                u982.BackgroundColor3 = u820.fromRGB(21, 20, 25)
+                u982.BackgroundColor3 = u861.Colors.CardDeep
                 u982.BackgroundTransparency = 0
                 u982.ClearTextOnFocus = false
                 u982.Parent = u916
@@ -3699,7 +3828,7 @@ function u864.create_ui(u876)
 
                 u984.MouseEnter:Connect(function()
                     u832:Create(u984, TweenInfo.new(0.25, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
-                        BackgroundColor3 = u820.fromRGB(21, 20, 25),
+                        BackgroundColor3 = u861.Colors.CardDeep,
                         BackgroundTransparency = 0.08
                     }):Play()
                 end)
@@ -3767,7 +3896,7 @@ function u864.create_ui(u876)
 
                 u985.MouseEnter:Connect(function()
                     u832:Create(u985, TweenInfo.new(0.25, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
-                        BackgroundColor3 = u820.fromRGB(21, 20, 25),
+                        BackgroundColor3 = u861.Colors.CardDeep,
                         BackgroundTransparency = 0.08
                     }):Play()
                 end)
@@ -4096,7 +4225,7 @@ function u864.create_ui(u876)
                 local u1000 = u859.new("Frame")
                 u1000.Size = u821.new(0, 12, 0, 12)
                 u1000.AnchorPoint = Vector2.new(0.5, 0.5)
-                u1000.BackgroundColor3 = u820.fromRGB(0, 0, 0)
+                u1000.BackgroundColor3 = u861.Colors.Blood
                 u1000.BorderSizePixel = 0
                 u1000.ZIndex = 5
                 u1000.Visible = false
@@ -4143,7 +4272,7 @@ function u864.create_ui(u876)
                 u1002.Size = u821.new(0, 6, 1, 4)
                 u1002.AnchorPoint = Vector2.new(0.5, 0.5)
                 u1002.Position = u821.new(u993._h, 0, 0.5, 0)
-                u1002.BackgroundColor3 = u820.fromRGB(0, 0, 0)
+                u1002.BackgroundColor3 = u861.Colors.Blood
                 u1002.BorderSizePixel = 0
                 u1002.ZIndex = 4
                 u1002.Visible = false
@@ -4781,6 +4910,16 @@ function u864.create_ui(u876)
                 u1013._theme_container_stroke.Color = r28.StrokeHot
             end
 
+            if u1013._theme_fullscreen then
+                for __frameIndex = 1, #u1013._theme_fullscreen do
+                    u1013._theme_fullscreen[__frameIndex].BackgroundColor3 = r28.AccentSoft
+                end
+            end
+
+            if u1013._theme_fullscreen_stroke then
+                u1013._theme_fullscreen_stroke.Color = r28.AccentSoft
+            end
+
             if u1013._theme_vert_div then
                 u1013._theme_vert_div.BackgroundColor3 = r28.Stroke
             end
@@ -5196,7 +5335,7 @@ function u864.create_ui(u876)
         u1027.Size = u821.new(0, 36, 0, 18)
         u1027.AnchorPoint = Vector2.new(1, 0.5)
         u1027.Position = u821.new(1, 0, 0.5, 0)
-        u1027.BackgroundColor3 = u820.fromRGB(8, 7, 12)
+        u1027.BackgroundColor3 = u861.Colors.Background
         u1027.BackgroundTransparency = 0.6
         u1027.Text = ""
         u1027.AutoButtonColor = false
@@ -5501,7 +5640,7 @@ function u864.create_ui(u876)
             local u1044 = u859.new("Frame")
             u1044.Size = u821.new(0, 12, 0, 12)
             u1044.AnchorPoint = Vector2.new(0.5, 0.5)
-            u1044.BackgroundColor3 = u820.fromRGB(0, 0, 0)
+            u1044.BackgroundColor3 = u861.Colors.Blood
             u1044.BorderSizePixel = 0
             u1044.ZIndex = 5
             u1044.Visible = false
@@ -5548,7 +5687,7 @@ function u864.create_ui(u876)
             u1046.Size = u821.new(0, 6, 1, 4)
             u1046.AnchorPoint = Vector2.new(0.5, 0.5)
             u1046.Position = u821.new(u1038._h, 0, 0.5, 0)
-            u1046.BackgroundColor3 = u820.fromRGB(0, 0, 0)
+            u1046.BackgroundColor3 = u861.Colors.Blood
             u1046.BorderSizePixel = 0
             u1046.ZIndex = 4
             u1046.Visible = false
@@ -5828,7 +5967,7 @@ local u1070 = {
         auto_parry = false,
         accuracy = 75,
         parry_range = 0,
-        parry_loop = "PreSimulation",
+        parry_loop = "PostSimulation",
         randomize_accuracy = false,
         random_accuracy_min = 1,
         random_accuracy_max = 100,
@@ -14801,9 +14940,16 @@ end
         elseif enabled then F.QueueAuto() end
     end
     function F.SetAutoLoop(mode)
-        mode = mode == "PreRender" and "PreRender" or "PreSimulation"
+        if mode ~= "PreRender" and mode ~= "PreSimulation" and mode ~= "PostSimulation" then
+            mode = "PostSimulation"
+        end
         u1070.config.parry_loop = mode
-        local signal = mode == "PreRender" and runService.PreRender or runService.PreSimulation
+        local signal = runService.PostSimulation
+        if mode == "PreRender" then
+            signal = runService.PreRender
+        elseif mode == "PreSimulation" then
+            signal = runService.PreSimulation
+        end
         connect("Auto Parry", signal, F.StepAuto)
     end
     function F.OnAutoTargetChanged(ball, state, target, old)
@@ -22396,11 +22542,23 @@ __S[13]:create_dropdown({
     end
 })
 
+do
+    local __loopVersion = u864._config.parry_loop_default_version
+
+    if __loopVersion ~= 2 then
+        u864._config._flags.parry_loop = "PostSimulation"
+        u864._config.parry_loop_default_version = 2
+        u864._config.parry_loop = "PostSimulation"
+        u1070.config.parry_loop = "PostSimulation"
+        u867:save(u796.GameId, u864._config)
+    end
+end
+
 __S[13]:create_dropdown({
     title = "Parry Loop",
     flag = "parry_loop",
-    options = {"PreSimulation", "PreRender"},
-    maximum_options = 2,
+    options = {"PostSimulation", "PreSimulation", "PreRender"},
+    maximum_options = 3,
     multi_dropdown = false,
     callback = function(value) u1070.sapphire.SetAutoLoop(value) end
 })
