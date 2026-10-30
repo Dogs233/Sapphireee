@@ -335,23 +335,23 @@ local u861 = {
         Success = "Success"
     },
     Colors = {
-        Background = u820.fromRGB(18, 10, 8),
-        Card = u820.fromRGB(31, 18, 13),
-        CardDeep = u820.fromRGB(44, 25, 18),
-        Stroke = u820.fromRGB(76, 42, 29),
-        StrokeHot = u820.fromRGB(126, 62, 34),
-        Accent = u820.fromRGB(201, 60, 32),
-        AccentDim = u820.fromRGB(92, 32, 14),
-        AccentSoft = u820.fromRGB(233, 141, 84),
-        AccentGlow = u820.fromRGB(226, 88, 34),
-        Text = u820.fromRGB(243, 230, 213),
-        SubText = u820.fromRGB(151, 116, 96),
-        NotifyBg = u820.fromRGB(31, 18, 13),
-        Danger = u820.fromRGB(158, 26, 26),
-        Success = u820.fromRGB(122, 154, 88),
-        Bone = u820.fromRGB(238, 224, 202),
-        Pumpkin = u820.fromRGB(234, 124, 32),
-        Blood = u820.fromRGB(122, 16, 16)
+        Background = u820.fromRGB(15, 15, 17),
+        Card = u820.fromRGB(16, 16, 18),
+        CardDeep = u820.fromRGB(8, 8, 10),
+        Stroke = u820.fromRGB(26, 26, 28),
+        StrokeHot = u820.fromRGB(38, 38, 42),
+        Accent = u820.fromRGB(232, 232, 236),
+        AccentDim = u820.fromRGB(108, 107, 120),
+        AccentSoft = u820.fromRGB(222, 222, 224),
+        AccentGlow = u820.fromRGB(232, 232, 236),
+        Text = u820.fromRGB(216, 216, 218),
+        SubText = u820.fromRGB(110, 110, 112),
+        NotifyBg = u820.fromRGB(16, 16, 18),
+        Danger = u820.fromRGB(240, 96, 112),
+        Success = u820.fromRGB(126, 208, 152),
+        Bone = u820.fromRGB(216, 216, 218),
+        Pumpkin = u820.fromRGB(232, 232, 236),
+        Blood = u820.fromRGB(240, 96, 112)
     },
     DefaultColors = {},
     Connections = u816({}, {
@@ -717,7 +717,7 @@ function u864.SendNotification(r0)
     r3_4.Size = u821.new(0, 14, 0, 14)
     r3_4.Position = u821.new(0.5, 0, 0.5, 0)
     r3_4.AnchorPoint = Vector2.new(0.5, 0.5)
-    r3_4.Image = u866(r0.icon or "skull")
+    r3_4.Image = u866(r0.icon or "info")
     r3_4.ImageColor3 = r8
     r3_4.Parent = r2_4
     local r2_5 = r6.new("TextLabel")
@@ -862,27 +862,27 @@ function u864.create_ui(u876)
     end)()
 
     do
-        local __halloween = {
-            Background = u820.fromRGB(18, 10, 8),
-            Card = u820.fromRGB(31, 18, 13),
-            CardDeep = u820.fromRGB(44, 25, 18),
-            Stroke = u820.fromRGB(76, 42, 29),
-            StrokeHot = u820.fromRGB(126, 62, 34),
-            Accent = u820.fromRGB(201, 60, 32),
-            AccentDim = u820.fromRGB(92, 32, 14),
-            AccentSoft = u820.fromRGB(233, 141, 84),
-            AccentGlow = u820.fromRGB(226, 88, 34),
-            Text = u820.fromRGB(243, 230, 213),
-            SubText = u820.fromRGB(151, 116, 96),
-            NotifyBg = u820.fromRGB(31, 18, 13),
-            Danger = u820.fromRGB(158, 26, 26),
-            Success = u820.fromRGB(122, 154, 88),
-            Bone = u820.fromRGB(238, 224, 202),
-            Pumpkin = u820.fromRGB(234, 124, 32),
-            Blood = u820.fromRGB(122, 16, 16)
+        local __palette = {
+            Background = u820.fromRGB(15, 15, 17),
+            Card = u820.fromRGB(16, 16, 18),
+            CardDeep = u820.fromRGB(8, 8, 10),
+            Stroke = u820.fromRGB(26, 26, 28),
+            StrokeHot = u820.fromRGB(38, 38, 42),
+            Accent = u820.fromRGB(232, 232, 236),
+            AccentDim = u820.fromRGB(108, 107, 120),
+            AccentSoft = u820.fromRGB(222, 222, 224),
+            AccentGlow = u820.fromRGB(232, 232, 236),
+            Text = u820.fromRGB(216, 216, 218),
+            SubText = u820.fromRGB(110, 110, 112),
+            NotifyBg = u820.fromRGB(16, 16, 18),
+            Danger = u820.fromRGB(240, 96, 112),
+            Success = u820.fromRGB(126, 208, 152),
+            Bone = u820.fromRGB(216, 216, 218),
+            Pumpkin = u820.fromRGB(232, 232, 236),
+            Blood = u820.fromRGB(240, 96, 112)
         }
 
-        for __key, __value in pairs(__halloween) do
+        for __key, __value in pairs(__palette) do
             u861.Colors[__key] = __value
         end
     end
@@ -905,10 +905,10 @@ function u864.create_ui(u876)
     r2.Parent = u879
     local __containerGrad = r4.new("UIGradient")
     __containerGrad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, u820.fromRGB(40, 21, 14)),
-        ColorSequenceKeypoint.new(0.42, u820.fromRGB(22, 12, 9)),
-        ColorSequenceKeypoint.new(0.78, u820.fromRGB(30, 12, 10)),
-        ColorSequenceKeypoint.new(1, u820.fromRGB(20, 8, 8))
+        ColorSequenceKeypoint.new(0, u820.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.42, u820.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.78, u820.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, u820.fromRGB(255, 255, 255))
     })
     __containerGrad.Rotation = 118
     __containerGrad.Parent = u879
@@ -925,15 +925,15 @@ function u864.create_ui(u876)
     u880.Parent = u879
     local u881 = r4.new("Frame")
     u881.Name = "Search"
-    u881.Size = u821.new(0, 32, 0, 32)
-    u881.Position = u821.new(1, -14, 0, 10)
+    u881.Size = u821.new(0, 154, 0, 32)
+    u881.Position = u821.new(1, -50, 0, 10)
     u881.AnchorPoint = Vector2.new(1, 0)
     u881.BackgroundColor3 = u877.CardDeep
     u881.BackgroundTransparency = 0.3
     u881.BorderSizePixel = 0
     u881.Parent = u880
     local r3 = r4.new("UICorner")
-    r3.CornerRadius = u822.new(1, 0)
+    r3.CornerRadius = u822.new(0, 11)
     r3.Parent = u881
     local r10 = r4.new("UIStroke")
     r10.Color = u877.StrokeHot
@@ -941,20 +941,20 @@ function u864.create_ui(u876)
     r10.Parent = u881
     local r11 = r4.new("ImageButton")
     r11.Size = u821.new(0, 15, 0, 15)
-    r11.Position = u821.new(0, 8, 0.5, 0)
+    r11.Position = u821.new(0, 10, 0.5, 0)
     r11.AnchorPoint = Vector2.new(0, 0.5)
-    r11.ImageColor3 = u877.Accent
+    r11.ImageColor3 = u877.AccentDim
     r11.BackgroundTransparency = 1
     r11.Image = u866("search")
     r11.Parent = u881
     local u882 = r4.new("TextBox")
-    u882.Size = u821.new(1, -38, 1, 0)
-    u882.Position = u821.new(0, 32, 0, 0)
+    u882.Size = u821.new(1, -42, 1, 0)
+    u882.Position = u821.new(0, 36, 0, 0)
     u882.TextXAlignment = u824.TextXAlignment.Left
     u882.TextYAlignment = u824.TextYAlignment.Center
     u882.BackgroundTransparency = 1
-    u882.TextTransparency = 1
-    u882.PlaceholderText = "Search modules..."
+    u882.TextTransparency = 0
+    u882.PlaceholderText = "Search"
     u882.PlaceholderColor3 = u877.SubText
     u882.TextColor3 = u877.Text
     u882.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.Regular)
@@ -973,7 +973,7 @@ function u864.create_ui(u876)
         end
 
         u883 = true
-        u832:Create(u881, TweenInfo.new(0.38, u824.EasingStyle.Quint, u824.EasingDirection.Out), {Size = u821.new(0, 200, 0, 32)}):Play()
+        u832:Create(u881, TweenInfo.new(0.38, u824.EasingStyle.Quint, u824.EasingDirection.Out), {Size = u821.new(0, 154, 0, 32)}):Play()
         u832:Create(u882, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
 
         task.delay(0.15, function()
@@ -988,8 +988,8 @@ function u864.create_ui(u876)
 
         u883 = false
         u882:ReleaseFocus()
-        u832:Create(u881, TweenInfo.new(0.38, u824.EasingStyle.Quint, u824.EasingDirection.Out), {Size = u821.new(0, 32, 0, 32)}):Play()
-        u832:Create(u882, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+        u832:Create(u881, TweenInfo.new(0.38, u824.EasingStyle.Quint, u824.EasingDirection.Out), {Size = u821.new(0, 154, 0, 32)}):Play()
+        u832:Create(u882, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
     end)
 
     u882:GetPropertyChangedSignal("Text"):Connect(function()
@@ -1064,13 +1064,86 @@ function u864.create_ui(u876)
     r47.TextTransparency = 0.05
     r47.Text = "Sapphire"
     r47.Name = "ClientName"
-    r47.Size = u821.new(0, 140, 0, 18)
+    r47.Size = u821.new(0, 80, 0, 18)
     r47.AnchorPoint = Vector2.new(0, 0.5)
-    r47.Position = u821.new(0.056, 0, 0.055, 0)
+    r47.Position = u821.new(0, 22, 0.055, 0)
     r47.BackgroundTransparency = 1
     r47.TextXAlignment = u824.TextXAlignment.Left
     r47.TextSize = 15
     r47.Parent = u880
+    local __gameTag = r4.new("TextLabel")
+    __gameTag.Name = "GameName"
+    __gameTag.BackgroundTransparency = 1
+    __gameTag.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.Regular)
+    __gameTag.Text = "Blade Ball"
+    __gameTag.TextColor3 = u877.SubText
+    __gameTag.TextSize = 11
+    __gameTag.TextXAlignment = u824.TextXAlignment.Left
+    __gameTag.AnchorPoint = Vector2.new(0, 0.5)
+    __gameTag.Position = u821.new(0, 108, 0.055, 0)
+    __gameTag.Size = u821.new(0, 170, 0, 14)
+    __gameTag.Parent = u880
+    __gameTag.Visible = false
+    u879:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+        __gameTag.Visible = u879.AbsoluteSize.X > 250
+    end)
+    local __titleBtn = r4.new("TextButton")
+    __titleBtn.Name = "TitleClick"
+    __titleBtn.BackgroundTransparency = 1
+    __titleBtn.Text = ""
+    __titleBtn.AutoButtonColor = false
+    __titleBtn.BorderSizePixel = 0
+    __titleBtn.AnchorPoint = Vector2.new(0, 0.5)
+    __titleBtn.Position = u821.new(0, 12, 0.055, 0)
+    __titleBtn.Size = u821.new(0, 160, 0, 36)
+    __titleBtn.Parent = u880
+    local function __titlePress(input)
+        if u864._blocking_drag then
+            return
+        end
+        local down = input.Position
+        u876._dragging = true
+        u876._drag_start = down
+        u876._container_position = u879.Position
+        local moved = false
+        local watch
+        watch = u830.InputChanged:Connect(function(move)
+            if move.UserInputType ~= u824.UserInputType.MouseMovement and move.UserInputType ~= u824.UserInputType.Touch then
+                return
+            end
+            if (move.Position - down).Magnitude > 5 then
+                moved = true
+            end
+        end)
+        local release
+        release = u830.InputEnded:Connect(function(up)
+            if up.UserInputType ~= u824.UserInputType.MouseButton1 and up.UserInputType ~= u824.UserInputType.Touch then
+                return
+            end
+            if watch then
+                watch:Disconnect()
+                watch = nil
+            end
+            if release then
+                release:Disconnect()
+                release = nil
+            end
+            u876._dragging = false
+            if moved then
+                return
+            end
+            if not u878.Enabled then
+                u878.Enabled = true
+            end
+            u876._ui_open = not u876._ui_open
+            u876:change_visiblity(u876._ui_open)
+        end)
+    end
+    __titleBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == u824.UserInputType.MouseButton1 or input.UserInputType == u824.UserInputType.Touch then
+            __titlePress(input)
+        end
+    end)
     local r56 = r4.new("UIGradient")
 
     r56.Color = ColorSequence.new({
@@ -1087,7 +1160,8 @@ function u864.create_ui(u876)
     __skullBadge.AnchorPoint = Vector2.new(0, 0.5)
     __skullBadge.Position = u821.new(0.055, 106, 0.055, 0)
     __skullBadge.Size = u821.new(0, 13, 0, 13)
-    __skullBadge.Image = u866("skull")
+    __skullBadge.Image = ""
+    __skullBadge.Visible = false
     __skullBadge.ImageColor3 = u861.Colors.Bone
     __skullBadge.ImageTransparency = 0.08
     __skullBadge.ZIndex = 2
@@ -1096,7 +1170,8 @@ function u864.create_ui(u876)
     __halloweenTag.Name = "HalloweenTag"
     __halloweenTag.BackgroundTransparency = 1
     __halloweenTag.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.Bold)
-    __halloweenTag.Text = "HALLOWEEN"
+    __halloweenTag.Text = ""
+    __halloweenTag.Visible = false
     __halloweenTag.TextSize = 8
     __halloweenTag.TextColor3 = u861.Colors.Pumpkin
     __halloweenTag.TextTransparency = 0.18
@@ -1136,6 +1211,7 @@ function u864.create_ui(u876)
     u885.ImageColor3 = u877.AccentSoft
     u885.Parent = u880
     u885.ImageRectSize = Vector2.new(0, 0)
+    u885.Visible = false
 
     local __fsParts = {}
     local __fsColor = u861.Colors.AccentSoft
@@ -1193,14 +1269,25 @@ function u864.create_ui(u876)
     u886.Name = "Sections"
     u886.Parent = u880
     local r81 = r4.new("TextButton")
-    r81.Text = ""
+    r81.Text = "-"
     r81.AutoButtonColor = false
     r81.BackgroundTransparency = 1
+    r81.TextColor3 = u877.SubText
+    r81.TextSize = 15
+    r81.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.Bold)
     r81.Name = "Minimize"
-    r81.Position = u821.new(0.0201, 0, 0.0292, 0)
-    r81.Size = u821.new(0, 24, 0, 24)
+    r81.AnchorPoint = Vector2.new(1, 0)
+    r81.Position = u821.new(1, -12, 0, 10)
+    r81.Size = u821.new(0, 28, 0, 32)
     r81.BorderSizePixel = 0
     r81.Parent = u880
+    local r81c = r4.new("UICorner")
+    r81c.CornerRadius = u822.new(0, 10)
+    r81c.Parent = r81
+    local r81s = r4.new("UIStroke")
+    r81s.Color = u877.StrokeHot
+    r81s.Transparency = 0.35
+    r81s.Parent = r81
     local u887 = r4.new("UIScale")
     u887.Parent = u879
     u876._container_uiscale = u887
@@ -1232,6 +1319,7 @@ function u864.create_ui(u876)
         badge.BorderSizePixel = 0
         badge.Active = false
         badge.ZIndex = u885.ZIndex
+        badge.Visible = false
         badge.Parent = u880
         local corner = r4.new("UICorner")
         corner.CornerRadius = u822.new(0, 7)
@@ -1291,9 +1379,9 @@ function u864.create_ui(u876)
         u885.ZIndex = badge.ZIndex + 1
         local facet = r4.new("UIGradient")
         facet.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, u820.fromRGB(255, 236, 214)),
-            ColorSequenceKeypoint.new(0.5, u820.fromRGB(255, 150, 80)),
-            ColorSequenceKeypoint.new(1, u820.fromRGB(255, 240, 226))
+            ColorSequenceKeypoint.new(0, u820.fromRGB(180, 180, 186)),
+            ColorSequenceKeypoint.new(0.5, u820.fromRGB(240, 240, 244)),
+            ColorSequenceKeypoint.new(1, u820.fromRGB(190, 190, 196))
         })
         facet.Rotation = 35
         facet.Parent = u885
@@ -1301,7 +1389,7 @@ function u864.create_ui(u876)
         hoverLight.ZIndex = badge.ZIndex + 2
         local glint = overlay("GemGlint", 16, 0.12)
         glint.ZIndex = badge.ZIndex + 3
-        glint.ImageColor3 = u820.fromRGB(255, 232, 205)
+        glint.ImageColor3 = u820.fromRGB(240, 240, 244)
         local shine = r4.new("UIGradient")
         shine.Rotation = 25
         shine.Offset = Vector2.new(-1.15, 0)
@@ -1540,7 +1628,7 @@ function u864.create_ui(u876)
 
         for r4, r5 in u884:GetChildren() do
             if r5.Name == "Tab" then
-                r5.BackgroundColor3 = u877.CardDeep
+                r5.BackgroundColor3 = u820.fromRGB(255, 255, 255)
                 local r2_2 = r5:FindFirstChild("Indicator")
                 local r13 = r5:FindFirstChildOfClass("TextLabel")
                 local r14 = r13 and r13:FindFirstChildOfClass("UIGradient")
@@ -1550,7 +1638,7 @@ function u864.create_ui(u876)
                     r5:SetAttribute("_active", true)
 
                     if r12 then
-                        u832:Create(r5, TweenInfo.new(0.32, u824.EasingStyle.Quint, u824.EasingDirection.Out), {BackgroundTransparency = 0.82}):Play()
+                        u832:Create(r5, TweenInfo.new(0.32, u824.EasingStyle.Quint, u824.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
 
                         if r13 then
                             u832:Create(r13, TweenInfo.new(0.32, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
@@ -1573,15 +1661,15 @@ function u864.create_ui(u876)
                         if r2_2 then
                             r2_2.BackgroundColor3 = u877.Accent
                             r2_2.BackgroundTransparency = 1
-                            r2_2.Size = u821.new(0, 3, 0, 6)
+                            r2_2.Size = u821.new(0, 4, 0, 6)
 
                             u832:Create(r2_2, TweenInfo.new(0.42, u824.EasingStyle.Back, u824.EasingDirection.Out), {
                                 BackgroundTransparency = 0,
-                                Size = u821.new(0, 3, 0, 22)
+                                Size = u821.new(0, 4, 0, 22)
                             }):Play()
                         end
                     else
-                        r5.BackgroundTransparency = 0.82
+                        r5.BackgroundTransparency = 0
 
                         if r13 then
                             r13.TextTransparency = 0
@@ -1600,7 +1688,7 @@ function u864.create_ui(u876)
                         if r2_2 then
                             r2_2.BackgroundColor3 = u877.Accent
                             r2_2.BackgroundTransparency = 0
-                            r2_2.Size = u821.new(0, 3, 0, 22)
+                            r2_2.Size = u821.new(0, 4, 0, 22)
                         end
                     end
                 else
@@ -1630,7 +1718,7 @@ function u864.create_ui(u876)
                         if r2_2 then
                             u832:Create(r2_2, TweenInfo.new(0.22, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
                                 BackgroundTransparency = 1,
-                                Size = u821.new(0, 3, 0, 10)
+                                Size = u821.new(0, 4, 0, 10)
                             }):Play()
                         end
                     else
@@ -1653,7 +1741,7 @@ function u864.create_ui(u876)
                         if r2_2 then
                             r2_2.BackgroundColor3 = u877.Accent
                             r2_2.BackgroundTransparency = 1
-                            r2_2.Size = u821.new(0, 3, 0, 10)
+                            r2_2.Size = u821.new(0, 4, 0, 10)
                         end
                     end
                 end
@@ -1693,7 +1781,7 @@ function u864.create_ui(u876)
         local r11 = u859.new("GetTextBoundsParams")
         r11.Text = r1
         r11.Font = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.SemiBold)
-        r11.Size = 13
+        r11.Size = 14
         r11.Width = 10000
         local r3_2 = u834:GetTextBoundsAsync(r11)
         local r8 = not r6.no_activate and (not u884:FindFirstChild("Tab") or u896._active_tab_ref == nil)
@@ -1704,7 +1792,7 @@ function u864.create_ui(u876)
         u897.Name = "Tab"
         u897.Size = u821.new(0, 129, 0, 38)
         u897.BorderSizePixel = 0
-        u897.BackgroundColor3 = u877.CardDeep
+        u897.BackgroundColor3 = u820.fromRGB(255, 255, 255)
         u897.Parent = u884
 
         if r6.layout_order ~= nil then
@@ -1717,12 +1805,19 @@ function u864.create_ui(u876)
         local r5 = u859.new("UICorner")
         r5.CornerRadius = u822.new(0, 8)
         r5.Parent = u897
+        local __tabGrad = u859.new("UIGradient")
+        __tabGrad.Rotation = 0
+        __tabGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, u820.fromRGB(64, 64, 66)),
+            ColorSequenceKeypoint.new(1, u820.fromRGB(11, 11, 13))
+        })
+        __tabGrad.Parent = u897
         local r5_2 = u859.new("UIScale")
         r5_2.Scale = 1
         r5_2.Parent = u897
         local r5_3 = u859.new("Frame")
         r5_3.Name = "Indicator"
-        r5_3.Size = u821.new(0, 3, 0, 20)
+        r5_3.Size = u821.new(0, 4, 0, 22)
         r5_3.Position = u821.new(0, 2, 0.5, 0)
         r5_3.AnchorPoint = Vector2.new(0, 0.5)
         r5_3.BackgroundColor3 = u877.Accent
@@ -1739,17 +1834,17 @@ function u864.create_ui(u876)
         r5_4.Text = r1
         r5_4.Size = u821.new(0, r3_2.X, 0, 16)
         r5_4.AnchorPoint = Vector2.new(0, 0.5)
-        r5_4.Position = u821.new(0.24, 0, 0.5, 0)
+        r5_4.Position = u821.new(0.215, 0, 0.5, 0)
         r5_4.BackgroundTransparency = 1
         r5_4.TextXAlignment = u824.TextXAlignment.Left
-        r5_4.TextSize = 13
+        r5_4.TextSize = 14
         r5_4.Parent = u897
         local r6_3 = u859.new("UIGradient")
 
         r6_3.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, u877.Text),
-            ColorSequenceKeypoint.new(0.65, u820.fromRGB(170, 140, 120)),
-            ColorSequenceKeypoint.new(1, u820.fromRGB(70, 40, 30))
+            ColorSequenceKeypoint.new(0.65, u820.fromRGB(200, 200, 204)),
+            ColorSequenceKeypoint.new(1, u820.fromRGB(150, 150, 154))
         })
 
         r6_3.Parent = r5_4
@@ -1758,11 +1853,11 @@ function u864.create_ui(u876)
         r5_5.ImageTransparency = 0.45
         r5_5.AnchorPoint = Vector2.new(0, 0.5)
         r5_5.BackgroundTransparency = 1
-        r5_5.Position = u821.new(0.1, 0, 0.5, 0)
+        r5_5.Position = u821.new(0.085, 0, 0.5, 0)
         r5_5.Name = "Icon"
         r5_5.Image = u866(r2)
         r5_5.ImageColor3 = u877.Text
-        r5_5.Size = u821.new(0, 13, 0, 13)
+        r5_5.Size = u821.new(0, 15, 0, 15)
         r5_5.BorderSizePixel = 0
         r5_5.Parent = u897
 
@@ -1884,7 +1979,7 @@ function u864.create_ui(u876)
             r5.Parent = r4_4
             local u907 = u859.new("Frame")
             u907.Name = "AccentBar"
-            u907.Size = u821.new(0, 2, 0, 50)
+            u907.Size = u821.new(0, 0, 0, 0)
             u907.Position = u821.new(0, 2, 0.5, 0)
             u907.AnchorPoint = Vector2.new(0, 0.5)
             u907.BackgroundColor3 = u861.Colors.AccentDim
@@ -1906,17 +2001,17 @@ function u864.create_ui(u876)
             r4_6.Name = "Icon"
             r4_6.Size = u821.new(0, 15, 0, 15)
             r4_6.BorderSizePixel = 0
-            r4_6.ImageTransparency = 0.25
+            r4_6.ImageTransparency = 1
             r4_6.Parent = r16
             local u908 = u859.new("ImageButton")
             u908.Name = "PinBtn"
             u908.Size = u821.new(0, 13, 0, 13)
             u908.AnchorPoint = Vector2.new(1, 0.5)
-            u908.Position = u821.new(1, -10, 0.5, -23)
+            u908.Position = u821.new(1, -12, 0, 32)
             u908.BackgroundTransparency = 1
             u908.Image = u866("pin") ~= "" and u866("pin") or "rbxassetid://7072718362"
             u908.ImageColor3 = u877.SubText
-            u908.ImageTransparency = 0.55
+            u908.ImageTransparency = 1
             u908.BorderSizePixel = 0
             u908.ZIndex = 5
             u908.Parent = r16
@@ -1926,7 +2021,7 @@ function u864.create_ui(u876)
             end)
 
             u908.MouseLeave:Connect(function()
-                u832:Create(u908, TweenInfo.new(0.22), {ImageColor3 = u902 and u877.Accent or u877.SubText, ImageTransparency = u902 and 0.08 or 0.55}):Play()
+                u832:Create(u908, TweenInfo.new(0.22), {ImageColor3 = u902 and u877.Accent or u877.SubText, ImageTransparency = u902 and 0.08 or 1}):Play()
             end)
 
             u908.MouseButton1Click:Connect(function()
@@ -1947,7 +2042,7 @@ function u864.create_ui(u876)
 
                     u832:Create(u908, TweenInfo.new(0.35, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
                         ImageColor3 = u877.SubText,
-                        ImageTransparency = 0.55
+                        ImageTransparency = 1
                     }):Play()
 
                     if not u901._state then
@@ -1969,9 +2064,9 @@ function u864.create_ui(u876)
             end
 
             r4_7.Name = "ModuleName"
-            r4_7.Size = u821.new(0, 205, 0, 14)
-            r4_7.AnchorPoint = Vector2.new(0, 0.5)
-            r4_7.Position = u821.new(0.073, 0, 0.24, 0)
+            r4_7.Size = u821.new(0, 200, 0, 16)
+            r4_7.AnchorPoint = Vector2.new(0, 0)
+            r4_7.Position = u821.new(0, 12, 0, 24)
             r4_7.BackgroundTransparency = 1
             r4_7.TextXAlignment = u824.TextXAlignment.Left
             r4_7.TextSize = 13
@@ -1982,9 +2077,9 @@ function u864.create_ui(u876)
             r4_8.TextTransparency = 0.1
             r4_8.Text = u903.description or ""
             r4_8.Name = "Description"
-            r4_8.Size = u821.new(0, 205, 0, 13)
-            r4_8.AnchorPoint = Vector2.new(0, 0.5)
-            r4_8.Position = u821.new(0.073, 0, 0.42, 0)
+            r4_8.Size = u821.new(0, 200, 0, 13)
+            r4_8.AnchorPoint = Vector2.new(0, 0)
+            r4_8.Position = u821.new(0, 12, 0, 46)
             r4_8.BackgroundTransparency = 1
             r4_8.TextXAlignment = u824.TextXAlignment.Left
             r4_8.TextSize = 10
@@ -1992,8 +2087,9 @@ function u864.create_ui(u876)
             local u909 = u859.new("Frame")
             u909.Name = "Toggle"
             u909.BackgroundTransparency = 0.6
-            u909.Position = u821.new(0.82, 0, 0.757, 0)
-            u909.Size = u821.new(0, 26, 0, 13)
+            u909.AnchorPoint = Vector2.new(1, 0.5)
+            u909.Position = u821.new(1, -12, 0.82, 0)
+            u909.Size = u821.new(0, 34, 0, 18)
             u909.BorderSizePixel = 0
             u909.BackgroundColor3 = u861.Colors.Background
             u909.Parent = r16
@@ -2007,9 +2103,9 @@ function u864.create_ui(u876)
             local u910 = u859.new("Frame")
             u910.AnchorPoint = Vector2.new(0, 0.5)
             u910.BackgroundTransparency = 0.1
-            u910.Position = u821.new(0, 2, 0.5, 0)
+            u910.Position = u821.new(0, 3, 0.5, 0)
             u910.Name = "Circle"
-            u910.Size = u821.new(0, 9, 0, 9)
+            u910.Size = u821.new(0, 12, 0, 12)
             u910.BorderSizePixel = 0
             u910.BackgroundColor3 = u877.SubText
             u910.Parent = u909
@@ -2018,24 +2114,29 @@ function u864.create_ui(u876)
             r4_11.Parent = u910
             local u911 = u859.new("Frame")
             u911.Name = "Keybind"
-            u911.BackgroundTransparency = 0.65
-            u911.Position = u821.new(0.15, 0, 0.73, 0)
-            u911.Size = u821.new(0, 33, 0, 15)
+            u911.BackgroundTransparency = 0
+            u911.AnchorPoint = Vector2.new(0, 0.5)
+            u911.Position = u821.new(0, 12, 0.82, 0)
+            u911.Size = u821.new(0, 20, 0, 20)
             u911.BorderSizePixel = 0
-            u911.BackgroundColor3 = u877.Accent
+            u911.BackgroundColor3 = u877.Card
             u911.Parent = r16
             local r4_12 = u859.new("UICorner")
-            r4_12.CornerRadius = u822.new(0, 3)
+            r4_12.CornerRadius = u822.new(0, 6)
             r4_12.Parent = u911
+            local r4_kb = u859.new("UIStroke")
+            r4_kb.Color = u877.StrokeHot
+            r4_kb.Transparency = 0.35
+            r4_kb.Parent = u911
 
             local u912 = u859.new("TextLabel")
             u912.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", u824.FontWeight.SemiBold)
             u912.TextColor3 = u877.AccentSoft
-            u912.Text = "None"
+            u912.Text = "-"
             u912.AnchorPoint = Vector2.new(0.5, 0.5)
-            u912.Size = u821.new(0, 25, 0, 13)
+            u912.Size = u821.new(0, 20, 0, 13)
             u912.BackgroundTransparency = 1
-            u912.TextXAlignment = u824.TextXAlignment.Left
+            u912.TextXAlignment = u824.TextXAlignment.Center
             u912.Position = u821.new(0.5, 0, 0.5, 0)
             u912.TextSize = 10
             u912.Parent = u911
@@ -2046,9 +2147,9 @@ function u864.create_ui(u876)
                 u913 = u864._config._library[u914] == true
                 local u915 = u859.new("ImageButton")
                 u915.Name = "Bell"
-                u915.Size = u821.new(0, 18, 0, 18)
-                u915.AnchorPoint = Vector2.new(0, 0)
-                u915.Position = u821.new(0.72, 0, 0.735, 0)
+                u915.Size = u821.new(0, 14, 0, 14)
+                u915.AnchorPoint = Vector2.new(1, 0.5)
+                u915.Position = u821.new(1, -56, 0.82, 0)
                 u915.BackgroundTransparency = 1
                 u915.Image = u866("bell")
                 u915.ImageColor3 = u913 and u877.Accent or u877.SubText
@@ -2068,7 +2169,7 @@ function u864.create_ui(u876)
                 end)
             end
 
-            for r5_2, r6 in {0.62, 1} do
+            for r5_2, r6 in {1} do
                 local r25 = u859.new("Frame")
                 r25.AnchorPoint = Vector2.new(0.5, 0)
                 r25.BackgroundTransparency = 0.12
@@ -2137,12 +2238,12 @@ function u864.create_ui(u876)
 
                     u832:Create(u909, TweenInfo.new(0.45, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
                         BackgroundColor3 = u861.Colors.Accent,
-                        BackgroundTransparency = 0.3
+                        BackgroundTransparency = 0
                     }):Play()
 
                     u832:Create(u910, TweenInfo.new(0.35, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
-                        Size = u821.new(0, 9, 0, 9),
-                        Position = u821.new(1, -11, 0.5, 0),
+                        Size = u821.new(0, 12, 0, 12),
+                        Position = u821.new(1, -15, 0.5, 0),
                         BackgroundColor3 = u861.Colors.Background
                     }):Play()
 
@@ -2159,8 +2260,8 @@ function u864.create_ui(u876)
                     }):Play()
 
                     u832:Create(u910, TweenInfo.new(0.35, u824.EasingStyle.Quint, u824.EasingDirection.Out), {
-                        Size = u821.new(0, 9, 0, 9),
-                        Position = u821.new(0, 2, 0.5, 0),
+                        Size = u821.new(0, 12, 0, 12),
+                        Position = u821.new(0, 3, 0.5, 0),
                         BackgroundColor3 = u861.Colors.SubText
                     }):Play()
 
@@ -2212,11 +2313,11 @@ function u864.create_ui(u876)
                     r1_2.Size = 10
                     r1_2.Width = 10000
                     local r8 = u834:GetTextBoundsAsync(r1_2)
-                    u911.Size = u821.fromOffset(r8.X + 6, 15)
+                    u911.Size = u821.fromOffset(r8.X + 6, 20)
                     u912.Size = u821.fromOffset(r8.X, 13)
                 else
-                    u911.Size = u821.fromOffset(31, 15)
-                    u912.Size = u821.fromOffset(25, 13)
+                    u911.Size = u821.fromOffset(20, 20)
+                    u912.Size = u821.fromOffset(20, 13)
                 end
             end
 
@@ -2224,9 +2325,9 @@ function u864.create_ui(u876)
                 u901._state = true
                 u904:SetAttribute("expanded", true)
                 u909.BackgroundColor3 = u861.Colors.Accent
-                u909.BackgroundTransparency = 0.3
+                u909.BackgroundTransparency = 0
                 u910.BackgroundColor3 = u861.Colors.Background
-                u910.Position = u821.new(1, -11, 0.5, 0)
+                u910.Position = u821.new(1, -15, 0.5, 0)
                 u907.BackgroundColor3 = u861.Colors.Accent
                 u907.BackgroundTransparency = 0.08
                 u906.Color = u861.Colors.Accent
@@ -2259,7 +2360,7 @@ function u864.create_ui(u876)
                         u901:scale_keybind(true)
                         u864._config._keybinds[u903.flag] = nil
                         u867:save(u796.GameId, u864._config)
-                        u912.Text = "None"
+                        u912.Text = "-"
                         u863:disconnect(u903.flag .. "_keybind")
                         u863:disconnect("keybind_choose_start")
                         u864.finish_keybind_capture()
@@ -3629,7 +3730,8 @@ function u864.create_ui(u876)
                     __dividerSkull.AnchorPoint = Vector2.new(0.5, 0.5)
                     __dividerSkull.Position = u821.new(0.5, -86, 0.5, 0)
                     __dividerSkull.Size = u821.new(0, 10, 0, 10)
-                    __dividerSkull.Image = u866("skull")
+                    __dividerSkull.Image = ""
+                    __dividerSkull.Visible = false
                     __dividerSkull.ImageColor3 = u861.Colors.Accent
                     __dividerSkull.ImageTransparency = 0.2
                     __dividerSkull.ZIndex = 3
@@ -4933,7 +5035,7 @@ function u864.create_ui(u876)
             end
 
             if u1013._theme_search_icon then
-                u1013._theme_search_icon.ImageColor3 = r28.Accent
+                u1013._theme_search_icon.ImageColor3 = r28.AccentDim
             end
 
             if u1013._theme_search_box then
@@ -14171,8 +14273,15 @@ end
     end)
     A.WatchCharacter()
     features.Animation = {
+        VIM = function() return F.Fire("Keypress") end,
         Keypress = function() return F.Fire("Keypress") end,
-        Input = function(method) return F.Fire(method) end,
+        Input = function(method, _, delay)
+            if delay and delay > 0 then
+                task.delay(delay, function() F.Fire(method) end)
+                return true
+            end
+            return F.Fire(method)
+        end,
         PlayAnimation = function(_, isTriggerbot)
             if isTriggerbot then
                  
@@ -14265,605 +14374,555 @@ features.Detection.UseProtection = function(line, object)
 	return false
 end
 
-attemptAutoParry = function(player15, line, object, descendant, radius, zCoordinate, isTriggerbot, decision)
-    if decision and not F.Decision.Valid(decision) then return false end
-	local model = localPlayer.Character
-	if not undoFunction(model) then
-		return false
-	end
+            attemptAutoParry = function(player15, line, object, descendant, radius, zCoordinate, isTriggerbot, decision)
+                local model = localPlayer.Character
+                if not undoFunction(model) then
+                    return false
+                end
 
-	if continuation(model) then
-		return false
-	end
+                if continuation(model) then
+                    return false
+                end
 
-	if not player15 then
-		player15 = features.Ball and features.Ball.GetMainBall and features.Ball.GetMainBall()
-	end
+                if not player15 then
+                    player15 = features.Ball and features.Ball.GetMainBall and features.Ball.GetMainBall()
+                end
 
-	if not player15 then
-		return false
-	end
-	line = line or flags.AutoParryType
+                if not player15 then
+                    return false
+                end
+                line = line or flags.AutoParryType
 
-	if line == "Remote" then
-		if features.Parry and features.Parry.Fire then
-			sapphireBBState.ParryMethod = "Remote"
-			local cell = not descendant
+                if line == "Remote" then
+                    if features.Parry and features.Parry.Fire then
+                        sapphireBBState.ParryMethod = "Remote"
+                        local cell = not descendant
 
-			if cell then
-				local targetPlayerName = localPlayer.Name
-				cell = compareFunction(player15) ~= targetPlayerName
-			end
+                        if cell then
+                            local targetPlayerName = localPlayer.Name
+                            cell = compareFunction(player15) ~= targetPlayerName
+                        end
 
-			if cell then
-				return false
-			end
+                        if cell then
+                            return false
+                        end
 
-			if index6(player15) then
-				sapphireBBState.ParryMethod = "Keypress"
-				if not features.Animation.Keypress() then
-					return false
-				end
-                if decision then F.Decision.Transported(decision) end
-			else
-				local osClock = os.clock()
+                        if index6(player15) then
+                            sapphireBBState.ParryMethod = "Keypress"
+                            if not features.Animation.VIM() then
+                                return false
+                            end
+                        else
+                            local osClock = os.clock()
 
-				if sapphireBBState.ParryCooldownUntil and osClock >= sapphireBBState.ParryCooldownUntil then
-					sapphireBBState.AutoParryAnimationPlayed = nil
-				end
+                            if sapphireBBState.ParryCooldownUntil and osClock >= sapphireBBState.ParryCooldownUntil then
+                                sapphireBBState.AutoParryAnimationPlayed = nil
+                            end
 
-				local active = not sapphireBBState.AutoParryAnimationPlayed and (not sapphireBBState.ParryCooldownUntil or osClock >= sapphireBBState.ParryCooldownUntil)
-				local radians, angleRadians = features.Parry.Fire(object and features.Curve.GetCFrame() or nil)
-                if decision and radians then F.Decision.Transported(decision) end
-                if decision and not F.Decision.Valid(decision) then return false end
-				if not radians then
-					return false
-				end
+                            local active = not sapphireBBState.AutoParryAnimationPlayed and (not sapphireBBState.ParryCooldownUntil or osClock >= sapphireBBState.ParryCooldownUntil)
+                            local radians, angleRadians = features.Parry.Fire(object and features.Curve.GetCFrame() or nil)
+                            if not radians then
+                                return false
+                            end
 
-				if active and sapphireBBState.ParryMethod == "Remote" then
-					if angleRadians or (decision and F.Decision.Animate(isTriggerbot) or not decision and features.Animation.PlayAnimation(true, isTriggerbot)) then
-						sapphireBBState.AutoParryAnimationPlayed = true
-					end
-				end
-			end
-		end
-	else
-		local cell = not descendant
+                            if active and sapphireBBState.ParryMethod == "Remote" then
+                                if angleRadians or features.Animation.PlayAnimation(true) then
+                                    sapphireBBState.AutoParryAnimationPlayed = true
+                                end
+                            end
+                        end
+                    end
+                else
+                    local cell = not descendant
 
-		if cell then
-			local targetPlayerName = localPlayer.Name
-			cell = compareFunction(player15) ~= targetPlayerName
-		end
+                    if cell then
+                        local targetPlayerName = localPlayer.Name
+                        cell = compareFunction(player15) ~= targetPlayerName
+                    end
 
-		if cell then
-			return false
-		end
-		if not features.Animation.Input(line) then
-			return false
-		end
-        if decision then F.Decision.Transported(decision) end
-        if decision and not F.Decision.Valid(decision) then return false end
-        if not isTriggerbot then
-            if decision then F.Decision.Animate() else features.Animation.PlayAnimation(true) end
-        end
-	end
+                    if cell then
+                        return false
+                    end
+                    local difference = 0
 
-    if decision and not F.Decision.Valid(decision) then return false end
-	if flags.AutoSpamEnabled then
-		local osClock = os.clock()
+                    if line == "Hardware Click" and zCoordinate then
+                        local vehicleRoot = model.PrimaryPart
+                        local exponent = index4(player15).Magnitude
 
-		while sapphireBBState.SpamParries[1] and sapphireBBState.SpamParries[1] < osClock - 0.75 do
-			table.remove(sapphireBBState.SpamParries, 1)
-		end
+                        if vehicleRoot and exponent > 0 then
+                            local openError = (vehicleRoot.Position - unexecuteFunction(player15)).Magnitude / exponent
+                            local step = math.clamp((zCoordinate - 1) / 99, 0, 1)
+                            difference = math.clamp(openError * (0.16 - step * 0.07), 0.02 - step * 0.008, 0.055 - step * 0.01)
+                        end
+                    end
 
-		sapphireBBState.SpamParries[#sapphireBBState.SpamParries + 1] = osClock
-		local cell = not descendant
+                    if not features.Animation.Input(line, nil, difference) then
+                        return false
+                    end
+                end
 
-		if cell then
-			local targetPlayerName = localPlayer.Name
-			cell = compareFunction(player15) == targetPlayerName
-		end
+                if flags.AutoSpamEnabled then
+                    local osClock = os.clock()
 
-		if cell then
-			sapphireBBState.SpamBall = player15
-			sapphireBBState.SpamTargetAt = osClock
-		end
-	end
+                    while sapphireBBState.SpamParries[1] and sapphireBBState.SpamParries[1] < osClock - 0.75 do
+                        table.remove(sapphireBBState.SpamParries, 1)
+                    end
 
-	sapphireBBState.PreclickFired = nil
-	sapphireBBState.PreclickCooldown = nil
-	sapphireBBState.ParryActiveUntil = os.clock() + math.max(0, 0.5 - (radius or previous() + math.min(pingJitterMs(), 40)) / 2000)
-	sapphireBBState.CooldownProtected = nil
-	return true
-end
+                    sapphireBBState.SpamParries[#sapphireBBState.SpamParries + 1] = osClock
+                    local cell = not descendant
+
+                    if cell then
+                        local targetPlayerName = localPlayer.Name
+                        cell = compareFunction(player15) == targetPlayerName
+                    end
+
+                    if cell then
+                        sapphireBBState.SpamBall = player15
+                        sapphireBBState.SpamTargetAt = osClock
+                    end
+                end
+
+                sapphireBBState.PreclickFired = nil
+                sapphireBBState.PreclickCooldown = nil
+                sapphireBBState.ParryActiveUntil = os.clock() + math.max(0, 0.5 - (radius or previous() + math.min(pingJitterMs(), 40)) / 2000)
+                sapphireBBState.CooldownProtected = nil
+                return true
+            end
 
  
-features.Loop.MainParryLoop = function(line, job)
-    if F.Destroyed or (job and (job.Generation ~= F.Decision.Generation or F.AutoJob ~= job)) then return end
-    F.SyncAutoSettings()
-	local graph = flags.AutoParryEnabled
-	if not graph and not flags.DribbleDetection then
-		return
-	end
-	local osClock = os.clock()
-	smallest = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
-	local model = localPlayer.Character
-	if not undoFunction(model) or not F.Decision.Alive(model) then
-		return
-	end
+            features.Loop.MainParryLoop = function(line, job)
+                local graph = flags.AutoParryEnabled
+                if not graph and not flags.DribbleDetection then
+                    return
+                end
+                local osClock = os.clock()
+                smallest = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
+                local model = localPlayer.Character
+                if not undoFunction(model) then
+                    return
+                end
 
-	if continuation(model) then
-		return
-	end
-	local vehicleRoot = model.PrimaryPart
-	local radians = features.Ball.GetAllBalls(true)
-	if #radians == 0 then
-		return
-	end
+                if continuation(model) then
+                    return
+                end
+                local vehicleRoot = model.PrimaryPart
+                local radians = features.Ball.GetAllBalls()
+                if #radians == 0 then
+                    return
+                end
 
-	if features.Detection.UseProtection(model, true) then
-		return
-	end
-    if job and (job.Generation ~= F.Decision.Generation or F.AutoJob ~= job) then return end
-	local valueType = flags.AutoParryType
-	local cell = valueType == "Remote"
+                if features.Detection.UseProtection(model, true) then
+                    return
+                end
+                local valueType = flags.AutoParryType
+                local cell = valueType == "Remote"
 
-	if cell then
-		cell = osClock < (sapphireBBState.ExtraParryCooldownUntil or 0)
-	end
+                if cell then
+                    cell = osClock < (sapphireBBState.ExtraParryCooldownUntil or 0)
+                end
 
-	if cell then
-		return
-	end
-	sapphireBBState.ExtraParryCooldownUntil = nil
+                if cell then
+                    return
+                end
+                sapphireBBState.ExtraParryCooldownUntil = nil
 
-	if top and osClock >= elapsedTime then
-		top = false
-		currentDate = nil
-	end
+                if top and osClock >= elapsedTime then
+                    top = false
+                    currentDate = nil
+                end
 
-    local provider = u1070.cache.adaptive_ping
-    local networkSnapshot = provider and provider.Snapshot and provider.Snapshot()
-    local angleRadians = networkSnapshot and networkSnapshot.CompensationPing or previous()
-    local jitter = math.min(networkSnapshot and networkSnapshot.Jitter or pingJitterMs(), 40)
-	local difference = (angleRadians + F.Decision.FrameBudget(osClock) * 1000) / 1000
-	sapphireBBState.ParryFrameAt = osClock
-	local openError = math.clamp(angleRadians / 10 + jitter / 8, 10, 16.7 + jitter / 8)
-	local step = math.clamp(difference * 0.5 - 0.05 + jitter / 2000, 0, 0.04 + jitter / 2000)
-	local clampedY = math.clamp(tonumber(flags.ParryRange) or 0, 0, 10)
-	local currentPosition = vehicleRoot.Position
-	local targetPlayerName = localPlayer.Name
-	local track, vertexCount = features.Detection.BlocksParry(nil, model, vehicleRoot)
-	if track then
-		return
-	end
-	local active = #radians > 1
-	local label = active and sapphireBBState.AutoBall
-	local steering = nil
+                local angleRadians = previous()
+                local jitter = math.min(pingJitterMs(), 40)
+                local difference = (angleRadians + math.min(osClock - (sapphireBBState.ParryFrameAt or osClock), 0.02) * 1000) / 1000
+                sapphireBBState.ParryFrameAt = osClock
+                local openError = math.clamp(angleRadians / 10 + jitter / 8, 10, 16.7 + jitter / 8)
+                local step = math.clamp(difference * 0.5 - 0.05 + jitter / 2000, 0, 0.04 + jitter / 2000)
+                local clampedY = math.clamp(tonumber(flags.ParryRange) or 0, 0, 10)
 
-	if label then
-		local attachment = sapphireBBState.AutoBall
-		local major = managerObject[attachment]
-		local isArray = graph and attachment.Parent and attachment:GetAttribute("from") == targetPlayerName
-		steering = nil
+                if flags.RandomizedParryRange then
+                    clampedY = math.random(flags.RandomizedRangeMin or 0, flags.RandomizedRangeMax or 10)
+                end
+                local currentPosition = vehicleRoot.Position
+                local targetPlayerName = localPlayer.Name
+                local track, vertexCount = features.Detection.BlocksParry(nil, model, vehicleRoot)
+                if track then
+                    return
+                end
+                local active = #radians > 1
+                local label = active and sapphireBBState.AutoBall
+                local steering = nil
 
-		if isArray then
-			steering = features.Loop.InvisDetection(model)
-		end
+                if label then
+                    local attachment = sapphireBBState.AutoBall
+                    local major = managerObject[attachment]
+                    local isArray = graph and attachment.Parent and attachment:GetAttribute("from") == targetPlayerName
+                    steering = nil
 
-		local bestLabel = not steering and attachment.Parent and compareFunction(attachment) == targetPlayerName
+                    if isArray then
+                        steering = features.Loop.InvisDetection(model)
+                    end
 
-		if bestLabel then
-			bestLabel = osClock < (major and major.ParryResetAt or 0)
-		end
+                    local bestLabel = not steering and attachment.Parent and compareFunction(attachment) == targetPlayerName
 
-        if bestLabel and osClock < (sapphireBBState.ParryActiveUntil or (major and major.ParryResetAt) or 0) then
-            return
-        end
-         
-		sapphireBBState.AutoBall = nil
-	end
+                    if bestLabel then
+                        bestLabel = osClock < (major and major.ParryResetAt or 0)
+                    end
 
-    local scan = active and F.Decision.Frame(vehicleRoot, networkSnapshot) or nil
-    if active and not scan then return end
-    if scan then currentPosition = scan.RootPosition end
-	local mathMax = 0
+                    if bestLabel then
+                        return
+                    end
+                    sapphireBBState.AutoBall = nil
+                end
 
-	if active then
-		for _, weld in pairs(radians) do
-            local position, velocity = F.Decision.Read(weld, scan)
-            if not position then continue end
-			local byte = managerObject[weld]
-			local result68 = weld and compareFunction(weld)
-			local splitHorizontal = byte and byte.Parried
+                local mathMax = 0
 
-			if splitHorizontal then
-				splitHorizontal = osClock < (byte.ParryResetAt or 0)
-			end
+                if active then
+                    for _, weld in pairs(radians) do
+                        local byte = managerObject[weld]
+                        local result68 = weld and compareFunction(weld)
+                        local splitHorizontal = byte and byte.Parried
 
-			if splitHorizontal then
-				mathMax += 1
-			elseif result68 == targetPlayerName and not index17(weld, result68) then
-				local minX = math.huge
-
-                local approaching, arrival = F.Decision.Rank(vehicleRoot, position, velocity, scan)
-				if approaching and arrival < minX then
-					mathMax += 1
-				end
-			end
-
-			if not (1 < mathMax) then
-				continue
-			end
-			break
-		end
-	end
-
-	local isArray = mathMax > 1
-	local major = nil
-	local byte = nil
-	local result68 = nil
-    local abilitySelection = nil
-    local abilityPriority, selectedPriority = nil, nil
-	local net = nil
-	local slider = nil
-	local newPrice = nil
-	local screenPoint = nil
-	local bestLabel = nil
-	local result69 = nil
-	local result70 = nil
-	local result71 = nil
-
-	for _, word in pairs(radians) do
-		if word and word.Parent then
-             
-            if flags.DribbleDetection and not F.Decision.Read(word, scan) then continue end
-			local ikConstraint = index7(word)
-			local result72 = compareFunction(word)
-
-			if not index17(word, result72) then
-				local result73 = nil
-				local bestPair = nil
-
-				if flags.DribbleDetection then
-					result73, bestPair = features.Detection.GetSelfDribbleBall(word, vehicleRoot)
-				end
-
-				local isPinned = not result73 and graph and word:GetAttribute("from") == targetPlayerName
-				local changed = false
-
-				if isPinned then
-					if steering ~= nil then
-						changed = steering
-					else
-						changed = features.Loop.InvisDetection(model)
-						steering = changed
-					end
-				end
-
-				if changed then
-					if ikConstraint.InvisibleReturnAway == nil then
-						ikConstraint.InvisibleReturnAway = not ikConstraint.Parried
-					end
-
-					local dotProduct = (currentPosition - unexecuteFunction(word)):Dot(index4(word))
-					bestPair = dotProduct > 0
-
-					if dotProduct < 0 then
-						ikConstraint.InvisibleReturnAway = true
-					end
-
-					local result14 = ikConstraint.InvisibleReturnAway
-
-					if result14 then
-						result73 = word
-					else
-						result73 = word
-						bestPair = result14
-					end
-				else
-					ikConstraint.InvisibleReturnAway = nil
-				end
-
-				if not (not graph and not result73) then
-					if result73 and (changed and ikConstraint.InvisibleReturnAway or not changed and sapphireBBState.SelfDribbleAway) then
-						ikConstraint.Parried = false
-						ikConstraint.ParryResetAt = 0
-
-						if sapphireBBState.ManualBall == word then
-							sapphireBBState.ManualBall = nil
-						end
-
-						if currentDate == word then
-							top = false
-							currentDate = nil
-							elapsedTime = 0
-						end
-					end
-
-					if sapphireBBState.AutoBall == word and result72 ~= targetPlayerName then
-						sapphireBBState.AutoBall = nil
-					end
-
-					if sapphireBBState.ManualBall == word then
-						if result72 == targetPlayerName then
-							continue
-						end
-						sapphireBBState.ManualBall = nil
-					end
-
-					if ikConstraint.LoopTarget ~= result72 then
-                        F.Decision.Clear(ikConstraint)
-                        F.Predictive.Clear(ikConstraint)
-                        if currentDate == word then top, currentDate, elapsedTime = false, nil, 0 end
-						ikConstraint.Parried = false
-						ikConstraint.ParryResetAt = 0
-
-						if ikConstraint.Target ~= result72 then
-							if result72 == targetPlayerName then
-								index13(ikConstraint)
-							else
-								index14(ikConstraint)
-							end
-						end
-
-						ikConstraint.LoopTarget = result72
-
-						if result72 == targetPlayerName and currentDate == word then
-							top = false
-							currentDate = nil
-							elapsedTime = 0
-						end
-					end
-
-					if result72 ~= targetPlayerName then
-						ikConstraint.Parried = false
-					elseif ikConstraint.Parried then
-						if osClock < (ikConstraint.ParryResetAt or 0) then
-							continue
-						end
-						ikConstraint.Parried = false
-					end
-
-					local bestChild = packed == word and word or nil
-
-					if packed and features.Detection.GetDribbleBall(packed) ~= packed then
-						if currentDate == packed then
-							top = false
-							currentDate = nil
-							elapsedTime = 0
-						end
-
-						packed = nil
-						bestChild = nil
-					end
-
-					if flags.ParryOnDribble and not packed then
-						bestChild = features.Detection.GetDribbleBall(word)
-
-						if bestChild then
-							packed = bestChild
-						end
-					end
-
-					if not (word:GetAttribute("DribbleActive") == true and not flags.ParryOnDribble and not result73 and result72 ~= targetPlayerName) then
-						local dotProduct = bestChild or result73 or word
-                        if not scan then
-                            scan = F.Decision.Frame(vehicleRoot, networkSnapshot)
-                            if not scan then return end
-                            currentPosition = scan.RootPosition
+                        if splitHorizontal then
+                            splitHorizontal = osClock < (byte.ParryResetAt or 0)
                         end
-                        local choiceVersion, choiceCycle, choiceFrom = ikConstraint.CurveVersion, ikConstraint.AutoCycleVersion, word:GetAttribute("from")
-                        if dotProduct ~= word and not F.Decision.Read(word, scan) then continue end
-                        local ballPosition, moveDirection, result74 = F.Decision.Read(dotProduct, scan)
-                        if not result74 then continue end
-						local exponent = moveDirection.Magnitude
-						local index3 = dotProduct == word and result72 or compareFunction(dotProduct)
-						local rayOrigin = redoFunction(dotProduct, result74, osClock) or ballPosition
-						local leftChild = currentPosition - rayOrigin
-						local totalTime = leftChild.Magnitude
-						local endPosition = 101 - math.clamp(tonumber(flags.ParryAccuracy) or 80, 1, 100)
-						local ENT = sapphireBBState.PhantomData
-						local innerPlayer = sapphireBBState.PhantomTarget
-						innerPlayer = innerPlayer and innerPlayer:FindFirstChild("HumanoidRootPart")
-						local index31 = ENT and ENT.Name == "Phantom" and not ENT.Blatant and ENT.Type == "Spam" and innerPlayer and (currentPosition - innerPlayer.Position).Magnitude
 
-						if flags.RandomizedParryAccuracy then
-							local maximumValue = math.clamp(flags.RandomAccuracyMin or 1, 1, 100)
-							endPosition = 101 - math.random(maximumValue, math.clamp(flags.RandomAccuracyMax or 100, maximumValue, 100))
-						end
+                        if splitHorizontal then
+                            mathMax += 1
+                        elseif result68 == targetPlayerName and not index17(weld, result68) then
+                            local minX = math.huge
 
-						if index31 and index31 > 30 then
-							endPosition = 100
-						elseif index31 and not ENT.Released then
-							continue
-						end
+                            if onInputEnded(weld, currentPosition) < minX then
+                                mathMax += 1
+                            end
+                        end
 
-						local isRoblox = not result73
+                        if not (1 < mathMax) then
+                            continue
+                        end
+                        break
+                    end
+                end
 
-                        local curveBlocked = isRoblox and (flags.BackwardsAntiCurveEnabled and index11(dotProduct, moveDirection, index3, active) or index15(dotProduct, vehicleRoot, rayOrigin, moveDirection, totalTime, exponent, leftChild, index3, difference))
-                        if curveBlocked and u1070.config.predictive_timing == true then F.Predictive.Clear(ikConstraint) end
-                        if not curveBlocked then
-							if not (result73 and not bestPair) then
-								local maximumValue = math.clamp((endPosition - 1) / 99, 0, 1)
-								local offsetZ = maximumValue * maximumValue * (3 - 2 * maximumValue)
-								local newDenominator = 2.4 + math.clamp(exponent - 9.5, 0, 990.5) * 0.002
-								local center = exponent / newDenominator * (0.75 + maximumValue * 0.43)
-								local isInside = center <= 9.5
-								local clampedX = isInside and math.min(openError, exponent * difference) or openError + math.min(exponent * step, 30)
-								local max = clampedX + math.max(center, 9.5)
-								local tMinimum
+                local isArray = mathMax > 1
+                local major = nil
+                local byte = nil
+                local result68 = nil
+                local net = nil
+                local slider = nil
+                local newPrice = nil
+                local screenPoint = nil
+                local bestLabel = nil
+                local result69 = nil
+                local result70 = nil
+                local result71 = nil
 
-								if not (endPosition > 70) then
-									tMinimum = max
-								else
-									local maximumLength = math.clamp((endPosition - 44) / 30, 0, 1)
-									local index35 = maximumLength * maximumLength * (3 - 2 * maximumLength)
-									local callbackFunction = word:GetAttribute("from")
-									local offsetY = type(callbackFunction) == "string" and smallest and smallest:FindFirstChild(callbackFunction)
+                for _, word in pairs(radians) do
+                    if word then
+                        local ikConstraint = index7(word)
+                        local result72 = compareFunction(word)
 
-									if offsetY then
-										offsetY = offsetY.PrimaryPart or offsetY:FindFirstChild("HumanoidRootPart")
-									end
+                        if not index17(word, result72) then
+                            local result73 = nil
+                            local bestPair = nil
 
-									offsetY = offsetY and (currentPosition - offsetY.Position).Magnitude
-									local index36 = offsetY and math.clamp((8 - offsetY) / 3, 0, 1) or 0
+                            if flags.DribbleDetection then
+                                result73, bestPair = features.Detection.GetSelfDribbleBall(word, vehicleRoot)
+                            end
 
-									if offsetY and totalTime > offsetY + 3 then
-										index36 = 0
-									end
+                            local isPinned = not result73 and graph and word:GetAttribute("from") == targetPlayerName
+                            local changed = false
 
-									local index37 = (isInside and math.min(openError, exponent * difference) or openError) + math.max(exponent / newDenominator * (0.75 + maximumValue * 0.2), 9.5)
-									local index38 = openError + exponent / newDenominator * (1.4 + maximumValue * 0.2)
-									local clampedDistance = math.clamp((exponent - 1000) / 800, 0, 1)
-									local index39 = index38 + math.max(index37 - index38, 0) * clampedDistance
-									tMinimum = max + (index39 + (index37 - index39) * index36 - max) * index35
-								end
+                            if isPinned then
+                                if steering ~= nil then
+                                    changed = steering
+                                else
+                                    changed = features.Loop.InvisDetection(model)
+                                    steering = changed
+                                end
+                            end
 
-								local maximumLength
+                            if changed then
+                                if ikConstraint.InvisibleReturnAway == nil then
+                                    ikConstraint.InvisibleReturnAway = not ikConstraint.Parried
+                                end
 
-								if isArray and endPosition > 44 then
-									maximumLength = math.max(tMinimum, max)
-								else
-									maximumLength = tMinimum
-								end
+                                local dotProduct = (currentPosition - unexecuteFunction(word)):Dot(index4(word))
+                                bestPair = dotProduct > 0
 
-								isInside = isInside and (openError - clampedX) * (1 - offsetZ) or 0
-								local index35 = bestChild and clampedX * (1 - offsetZ * 0.5) or 0
-                                    local selectedRange = clampedY
-                                    if flags.RandomizedParryRange then
-                                        local minimumRange = math.clamp(math.floor(tonumber(flags.RandomizedRangeMin) or 0), 0, 10)
-                                        local maximumRange = math.clamp(math.floor(tonumber(flags.RandomizedRangeMax) or 10), minimumRange, 10)
-                                        local cycle = ikConstraint.AutoCycleVersion or 0
-                                        if ikConstraint.RandomizedRangeCycle ~= cycle then
-                                            ikConstraint.RandomizedRangeCycle = cycle
-                                            ikConstraint.RandomizedParryRange = math.random(minimumRange, maximumRange)
-                                        end
-                                        selectedRange = ikConstraint.RandomizedParryRange
+                                if dotProduct < 0 then
+                                    ikConstraint.InvisibleReturnAway = true
+                                end
+
+                                local result14 = ikConstraint.InvisibleReturnAway
+
+                                if result14 then
+                                    result73 = word
+                                else
+                                    result73 = word
+                                    bestPair = result14
+                                end
+                            else
+                                ikConstraint.InvisibleReturnAway = nil
+                            end
+
+                            if not (not graph and not result73) then
+                                if result73 and (changed and ikConstraint.InvisibleReturnAway or not changed and sapphireBBState.SelfDribbleAway) then
+                                    ikConstraint.Parried = false
+                                    ikConstraint.ParryResetAt = 0
+
+                                    if sapphireBBState.ManualBall == word then
+                                        sapphireBBState.ManualBall = nil
                                     end
-                                    local responseLead = math.clamp(exponent * 0.035, 0, 10)
-								local index36 = maximumLength + selectedRange + isInside + index35 + responseLead
-                                if dotProduct == word and not result73 and not bestChild and result72 == targetPlayerName and u1070.config.predictive_timing ~= true then
-                                    index36 = F.Decision.TimingRadius(vehicleRoot, rayOrigin, moveDirection, index36, scan, angleRadians, step)
+
+                                    if currentDate == word then
+                                        top = false
+                                        currentDate = nil
+                                        elapsedTime = 0
+                                    end
                                 end
-								local seat = flags.AutoAbilityEnabled and not result73 and result72 == targetPlayerName and totalTime <= maximumLength
-								local result75 = nil
-								local index58 = nil
-                                local candidatePriority = 0
 
-								if seat then
-                                    local approaching
-                                    approaching, result75, index58, candidatePriority = F.Decision.Rank(vehicleRoot, rayOrigin, moveDirection, scan)
-                                    if not approaching then result75 = math.huge end
-
-									if approaching and (not major or F.Decision.Prefer(candidatePriority, result75, index58, abilityPriority, major, byte)) then
-                                        abilityPriority = candidatePriority
-										major = result75
-										byte = index58
-										result68 = word
-                                        abilitySelection = F.Decision.Selection(scan, word, dotProduct, ikConstraint, result72, choiceVersion, choiceCycle, choiceFrom)
-									end
-								end
-
-								isRoblox = isRoblox and result72 ~= targetPlayerName and leftChild:Dot(moveDirection) > 0
-
-								if isRoblox then
-									if steering ~= nil then
-										isRoblox = steering
-									else
-										steering = features.Loop.InvisDetection(model)
-										isRoblox = steering
-									end
-								end
-
-                                local timingAllowed = totalTime <= index36
-                                if u1070.config.predictive_timing == true and dotProduct == word and not result73 and not bestChild and result72 == targetPlayerName then
-                                    timingAllowed = F.Predictive.Evaluate(ikConstraint, word, result72, vehicleRoot, rayOrigin, moveDirection, index36,
-                                        F.Predictive.Credit(exponent, step, endPosition, isArray, tMinimum, max, center), angleRadians, osClock)
+                                if sapphireBBState.AutoBall == word and result72 ~= targetPlayerName then
+                                    sapphireBBState.AutoBall = nil
                                 end
-                                if dotProduct == word and not result73 and not bestChild and result72 == targetPlayerName then
-                                    local approaching, arrival, centerArrival, priority = F.Decision.Rank(vehicleRoot, rayOrigin, moveDirection, scan)
-                                    candidatePriority = priority
-                                    timingAllowed = timingAllowed and approaching
-                                    if active then result75, index58 = arrival, centerArrival end
+
+                                if sapphireBBState.ManualBall == word then
+                                    if result72 == targetPlayerName then
+                                        continue
+                                    end
+                                    sapphireBBState.ManualBall = nil
                                 end
-								if (isRoblox or not result73 and result72 == targetPlayerName or bestChild or bestPair) and timingAllowed and not ikConstraint.Parried and (not top or currentDate ~= word) then
-									local empty = isRoblox or bestPair or not result73 and result72 == targetPlayerName
 
-									if not empty and bestChild then
-										empty = features.Detection.GetDribbleBall(bestChild) == bestChild
-									end
+                                if ikConstraint.LoopTarget ~= result72 then
+                                    ikConstraint.Parried = false
+                                    ikConstraint.ParryResetAt = 0
 
-									if empty then
-										if active and not result75 then
-											result75, index58 = onInputEnded(dotProduct, currentPosition, rayOrigin, moveDirection)
-										end
+                                    if ikConstraint.Target ~= result72 then
+                                        if result72 == targetPlayerName then
+                                            index13(ikConstraint)
+                                        else
+                                            index14(ikConstraint)
+                                        end
+                                    end
 
-										if not net or F.Decision.Prefer(candidatePriority, result75, index58, selectedPriority, slider, newPrice) then
-											bestLabel = not not (isRoblox or bestChild or result73)
-                                            selectedPriority = candidatePriority
-											net = word
-                                            F.Decision.Choose(scan, word, dotProduct, ikConstraint, result72, choiceVersion, choiceCycle, choiceFrom)
-											slider = result75
-											newPrice = index58
-											screenPoint = ikConstraint
-											result69 = endPosition
-											result70 = bestPair
-											result71 = changed
-										end
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
+                                    ikConstraint.LoopTarget = result72
 
-    local abilityUsed = result68 and F.Decision.Fresh(abilitySelection) and wrapper(vertexCount)
-    if job and (job.Generation ~= F.Decision.Generation or F.AutoJob ~= job) then return end
-	if abilityUsed then
-		top = true
-		currentDate = result68
-		elapsedTime = osClock + 0.6
-		return
-	end
+                                    if result72 == targetPlayerName and currentDate == word then
+                                        top = false
+                                        currentDate = nil
+                                        elapsedTime = 0
+                                    end
+                                end
 
-	if not net then
-		return
-	end
-    if job and (job.Generation ~= F.Decision.Generation or F.AutoJob ~= job) then return end
-    if not F.Decision.Fresh(scan) then return end
-    local decision = F.Decision.Begin(net, screenPoint, model, osClock, job)
-    if not F.Decision.Valid(decision) then F.Decision.Abort(decision); return end
-	screenPoint.Parried = true
-	screenPoint.ParryResetAt = osClock + 0.6
-	screenPoint.AutoParryAt = osClock
-	top = true
-	currentDate = net
-	elapsedTime = screenPoint.ParryResetAt
-	sapphireBBState.AutoBall = net
+                                if result72 ~= targetPlayerName then
+                                    ikConstraint.Parried = false
+                                elseif ikConstraint.Parried then
+                                    if osClock < (ikConstraint.ParryResetAt or 0) then
+                                        continue
+                                    end
+                                    ikConstraint.Parried = false
+                                end
 
-    if not attemptAutoParry(net, valueType, nil, bestLabel, angleRadians, result69, nil, decision)
-        or not F.Decision.Valid(decision) then
-        F.Decision.Abort(decision)
-        return
-    end
+                                local bestChild = packed == word and word or nil
 
-    F.Decision.Finish(decision)
-	if valueType == "Remote" then
-		sapphireBBState.AutoParryAt = osClock
-	end
+                                if packed and features.Detection.GetDribbleBall(packed) ~= packed then
+                                    if currentDate == packed then
+                                        top = false
+                                        currentDate = nil
+                                        elapsedTime = 0
+                                    end
 
-	if result70 then
-		if result71 then
-			screenPoint.InvisibleReturnAway = false
-		else
-			sapphireBBState.SelfDribbleAway = false
-		end
-	end
-end
+                                    packed = nil
+                                    bestChild = nil
+                                end
+
+                                if flags.ParryOnDribble and not packed then
+                                    bestChild = features.Detection.GetDribbleBall(word)
+
+                                    if bestChild then
+                                        packed = bestChild
+                                    end
+                                end
+
+                                if not (word:GetAttribute("DribbleActive") == true and not flags.ParryOnDribble and not result73 and result72 ~= targetPlayerName) then
+                                    local dotProduct = bestChild or result73 or word
+                                    local result74 = executeFunction(dotProduct)
+                                    local moveDirection = dotProduct == word and ikConstraint.Zoomies and ikConstraint.Zoomies.VectorVelocity or index4(dotProduct)
+                                    local exponent = moveDirection.Magnitude
+                                    local index3 = dotProduct == word and result72 or compareFunction(dotProduct)
+                                    local rayOrigin = redoFunction(dotProduct, result74, osClock) or result74 and result74.Position or Vector3.zero
+                                    local leftChild = currentPosition - rayOrigin
+                                    local totalTime = leftChild.Magnitude
+                                    local endPosition = 101 - math.clamp(tonumber(flags.ParryAccuracy) or 80, 1, 100)
+                                    local ENT = sapphireBBState.PhantomData
+                                    local innerPlayer = sapphireBBState.PhantomTarget
+                                    innerPlayer = innerPlayer and innerPlayer:FindFirstChild("HumanoidRootPart")
+                                    local index31 = ENT and ENT.Name == "Phantom" and not ENT.Blatant and ENT.Type == "Spam" and innerPlayer and (currentPosition - innerPlayer.Position).Magnitude
+
+                                    if flags.RandomizedParryAccuracy then
+                                        local maximumValue = math.clamp(flags.RandomAccuracyMin or 1, 1, 100)
+                                        endPosition = 101 - math.random(maximumValue, math.clamp(flags.RandomAccuracyMax or 100, maximumValue, 100))
+                                    end
+
+                                    if index31 and index31 > 30 then
+                                        endPosition = 100
+                                    elseif index31 and not ENT.Released then
+                                        continue
+                                    end
+
+                                    local isRoblox = not result73
+
+                                    if not (isRoblox and (flags.BackwardsAntiCurveEnabled and index11(dotProduct, moveDirection, index3, active) or index15(dotProduct, vehicleRoot, rayOrigin, moveDirection, totalTime, exponent, leftChild, index3, difference))) then
+                                        if not (result73 and not bestPair) then
+                                            local maximumValue = math.clamp((endPosition - 1) / 99, 0, 1)
+                                            local offsetZ = maximumValue * maximumValue * (3 - 2 * maximumValue)
+                                            local newDenominator = 2.4 + math.clamp(exponent - 9.5, 0, 990.5) * 0.002
+                                            local center = exponent / newDenominator * (0.75 + maximumValue * 0.43)
+                                            local isInside = center <= 9.5
+                                            local clampedX = isInside and math.min(openError, exponent * difference) or openError + math.min(exponent * step, 30)
+                                            local max = clampedX + math.max(center, 9.5)
+                                            local tMinimum
+
+                                            if not (endPosition > 70) then
+                                                tMinimum = max
+                                            else
+                                                local maximumLength = math.clamp((endPosition - 44) / 30, 0, 1)
+                                                local index35 = maximumLength * maximumLength * (3 - 2 * maximumLength)
+                                                local callbackFunction = word:GetAttribute("from")
+                                                local offsetY = type(callbackFunction) == "string" and smallest and smallest:FindFirstChild(callbackFunction)
+
+                                                if offsetY then
+                                                    offsetY = offsetY.PrimaryPart or offsetY:FindFirstChild("HumanoidRootPart")
+                                                end
+
+                                                offsetY = offsetY and (currentPosition - offsetY.Position).Magnitude
+                                                local index36 = offsetY and math.clamp((8 - offsetY) / 3, 0, 1) or 0
+
+                                                if offsetY and totalTime > offsetY + 3 then
+                                                    index36 = 0
+                                                end
+
+                                                local index37 = (isInside and math.min(openError, exponent * difference) or openError) + math.max(exponent / newDenominator * (0.75 + maximumValue * 0.2), 9.5)
+                                                local index38 = openError + exponent / newDenominator * (1.4 + maximumValue * 0.2)
+                                                local clampedDistance = math.clamp((exponent - 1000) / 800, 0, 1)
+                                                local index39 = index38 + math.max(index37 - index38, 0) * clampedDistance
+                                                tMinimum = max + (index39 + (index37 - index39) * index36 - max) * index35
+                                            end
+
+                                            local maximumLength
+
+                                            if isArray and endPosition > 44 then
+                                                maximumLength = math.max(tMinimum, max)
+                                            else
+                                                maximumLength = tMinimum
+                                            end
+
+                                            isInside = isInside and (openError - clampedX) * (1 - offsetZ) or 0
+                                            local index35 = bestChild and clampedX * (1 - offsetZ * 0.5) or 0
+                                            local offsetY = valueType == "Hardware Click"
+
+                                            if offsetY then
+                                                offsetY = exponent * (line or 0)
+                                            end
+
+                                            local index36 = maximumLength + clampedY + isInside + index35 + (offsetY or 0)
+                                            local seat = flags.AutoAbilityEnabled and not result73 and result72 == targetPlayerName and totalTime <= maximumLength
+                                            local result75 = nil
+                                            local index58 = nil
+
+                                            if seat then
+                                                result75, index58 = onInputEnded(word, currentPosition, rayOrigin, moveDirection)
+
+                                                if not major or result75 < major or result75 == major and index58 < byte then
+                                                    major = result75
+                                                    byte = index58
+                                                    result68 = word
+                                                end
+                                            end
+
+                                            isRoblox = isRoblox and result72 ~= targetPlayerName and leftChild:Dot(moveDirection) > 0
+
+                                            if isRoblox then
+                                                if steering ~= nil then
+                                                    isRoblox = steering
+                                                else
+                                                    steering = features.Loop.InvisDetection(model)
+                                                    isRoblox = steering
+                                                end
+                                            end
+
+                                            if (isRoblox or not result73 and result72 == targetPlayerName or bestChild or bestPair) and totalTime <= index36 and not ikConstraint.Parried and (not top or currentDate ~= word) then
+                                                local empty = isRoblox or bestPair or not result73 and result72 == targetPlayerName
+
+                                                if not empty and bestChild then
+                                                    empty = features.Detection.GetDribbleBall(bestChild) == bestChild
+                                                end
+
+                                                if empty then
+                                                    if active and not result75 then
+                                                        result75, index58 = onInputEnded(dotProduct, currentPosition, rayOrigin, moveDirection)
+                                                    end
+
+                                                    if not net or result75 < slider or result75 == slider and index58 < newPrice then
+                                                        bestLabel = not not (isRoblox or bestChild or result73)
+                                                        net = word
+                                                        slider = result75
+                                                        newPrice = index58
+                                                        screenPoint = ikConstraint
+                                                        result69 = endPosition
+                                                        result70 = bestPair
+                                                        result71 = changed
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+
+                if result68 and wrapper(vertexCount) then
+                    top = true
+                    currentDate = result68
+                    elapsedTime = osClock + 0.6
+                    return
+                end
+
+                if not net then
+                    return
+                end
+                screenPoint.Parried = true
+                screenPoint.ParryResetAt = osClock + 0.6
+                screenPoint.AutoParryAt = osClock
+                top = true
+                currentDate = net
+                elapsedTime = screenPoint.ParryResetAt
+                sapphireBBState.AutoBall = net
+
+                if not attemptAutoParry(net, valueType, nil, bestLabel, angleRadians, result69) then
+                    screenPoint.Parried = false
+                    screenPoint.ParryResetAt = 0
+                    screenPoint.AutoParryAt = nil
+                    sapphireBBState.AutoBall = nil
+                    top = false
+                    currentDate = nil
+                    elapsedTime = 0
+                    return
+                end
+
+                if valueType == "Remote" then
+                    sapphireBBState.AutoParryAt = osClock
+                end
+
+                if result70 then
+                    if result71 then
+                        screenPoint.InvisibleReturnAway = false
+                    else
+                        sapphireBBState.SelfDribbleAway = false
+                    end
+                end
+            end
 
      
     function F.ResetAutoState()
@@ -22231,7 +22290,7 @@ __S[5] = __S[84]:create_tab("Combat", "sword")
 __S[6] = __S[84]:create_tab("Detections", "shield")
 __S[7] = __S[84]:create_tab("Visuals", "eye")
 __S[8] = __S[84]:create_tab("Player", "user")
-__S[11] = __S[84]:create_tab("Blatant", "skull")
+__S[11] = __S[84]:create_tab("Blatant", "zap")
 __S[12] = __S[84]:create_tab("Misc", "settings")
 
  
